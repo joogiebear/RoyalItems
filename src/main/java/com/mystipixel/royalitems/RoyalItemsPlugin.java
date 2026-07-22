@@ -1,5 +1,8 @@
 package com.mystipixel.royalitems;
 
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,6 +21,9 @@ import java.util.logging.Level;
  */
 public final class RoyalItemsPlugin extends JavaPlugin {
 
+    /** bStats project id for RoyalItems. TODO: register at https://bstats.org and set this (0 = inert). */
+    private static final int BSTATS_PLUGIN_ID = 0;
+
     private FormattedItemService service;
 
     @Override
@@ -34,7 +40,23 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         getCommand("royalitems").setExecutor(command);
         getCommand("royalitems").setTabCompleter(command);
 
+        setupMetrics();
+        if (getConfig().getBoolean("update-checker", true)) {
+            new UpdateChecker(this, "joogiebear/RoyalItems").check();
+        }
+
         getLogger().info("RoyalItems enabled — " + service.all().size() + " formatted item(s).");
+    }
+
+    /** Anonymous usage stats via bStats. Inert until the project id is set; disable in plugins/bStats. */
+    private void setupMetrics() {
+        if (BSTATS_PLUGIN_ID <= 0) {
+            return;
+        }
+        Metrics metrics = new Metrics(this, BSTATS_PLUGIN_ID);
+        metrics.addCustomChart(new SingleLineChart("formatted_items", () -> service.all().size()));
+        metrics.addCustomChart(new SimplePie("format_on_join",
+                () -> getConfig().getBoolean("format-on-join", false) ? "enabled" : "disabled"));
     }
 
     /** The formatting service, for direct in-JVM access (other plugins should prefer the ServicesManager). */

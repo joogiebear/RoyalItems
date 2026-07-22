@@ -21,3 +21,6 @@ disabled-worlds: []
 # formatted too (uses the same guard, so custom items are never touched). Off by
 # default; /royalitems formatinv <player> does the same on demand.
 format-on-join: false
+
+# Log a note in the console on startup if a newer release is available on GitHub.
+update-checker: true
