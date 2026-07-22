@@ -6,8 +6,10 @@
 #
 #  Match by:  match (globs like '*_WOOL', 'DIAMOND_*', '*')  /  materials (a list)
 #  Rarity:    rarity (flat)  OR  tier-rarity (material-name prefix -> rarity)
-#  Templates (placeholders %name% %type% %rarity% %rarity_color% %material% %category%):
+#  Templates (placeholders %name% %type% %rarity% %rarity_color% %material% %category% %category_upper%):
 #             display-name, lore, tags
+#  Hypixel footer:  the last lore line is '%rarity% %category_upper%'  ->  e.g. "COMMON WOOD",
+#             "RARE SWORD" (category_upper falls back to the item type when a rule sets no category).
 #  format-on: craft, smith, mined, mob, harvest
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,7 @@ rules:
     lore:
       - '&7%type%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - smith
@@ -58,7 +60,7 @@ rules:
     lore:
       - '&7%type%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
 
@@ -85,7 +87,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -101,7 +103,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - mined
@@ -116,7 +118,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - mined
@@ -131,7 +133,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -146,7 +148,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -164,7 +166,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -181,7 +183,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - mined
@@ -200,7 +202,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -245,7 +247,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -278,7 +280,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft
@@ -306,7 +308,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - mined
@@ -330,7 +332,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mob
 
@@ -360,7 +362,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - harvest
@@ -380,7 +382,7 @@ rules:
     lore:
       - '&7%category%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - craft
       - mob
@@ -397,7 +399,7 @@ rules:
     lore:
       - '&7%type%'
       - ''
-      - '%rarity%'
+      - '%rarity% %category_upper%'
     format-on:
       - mined
       - craft

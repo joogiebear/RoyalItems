@@ -1,7 +1,9 @@
 # RoyalItems — mining resources. Lore is visual; identity is the PDC (item_id/fuel_id).
-# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+# Hypixel-style layout: rarity-coloured name, a "Collection Item" usage tag, then a bold
+# "RARITY CATEGORY" footer. Retune display-name, lore, and rarity freely; /royalitems reload to apply.
 
 formatted-items:
+  # Coal is special — it is a minion fuel, so it keeps a usage tag and an effect line.
   coal:
     material: COAL
     display-name: "&fCoal"
@@ -22,59 +24,59 @@ formatted-items:
     material: COBBLESTONE
     display-name: "&fCobblestone"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "cobblestone"
 
   diamond:
     material: DIAMOND
-    display-name: "&fDiamond"
+    display-name: "&9Diamond"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE GEM"
     tags:
       item_id: "diamond"
 
   emerald:
     material: EMERALD
-    display-name: "&fEmerald"
+    display-name: "&9Emerald"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE GEM"
     tags:
       item_id: "emerald"
 
   end_stone:
     material: END_STONE
-    display-name: "&fEnd Stone"
+    display-name: "&aEnd Stone"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON BLOCK"
     tags:
       item_id: "end_stone"
 
   glowstone_dust:
     material: GLOWSTONE_DUST
-    display-name: "&fGlowstone Dust"
+    display-name: "&aGlowstone Dust"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON DUST"
     tags:
       item_id: "glowstone_dust"
 
   gold_ingot:
     material: GOLD_INGOT
-    display-name: "&fGold Ingot"
+    display-name: "&aGold Ingot"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON METAL"
     tags:
       item_id: "gold_ingot"
 
@@ -82,39 +84,39 @@ formatted-items:
     material: GRAVEL
     display-name: "&fGravel"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "gravel"
 
   ice:
     material: ICE
-    display-name: "&fIce"
+    display-name: "&aIce"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON BLOCK"
     tags:
       item_id: "ice"
 
   iron_ingot:
     material: IRON_INGOT
-    display-name: "&fIron Ingot"
+    display-name: "&aIron Ingot"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON METAL"
     tags:
       item_id: "iron_ingot"
 
   lapis_lazuli:
     material: LAPIS_LAZULI
-    display-name: "&fLapis Lazuli"
+    display-name: "&aLapis Lazuli"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON GEM"
     tags:
       item_id: "lapis_lazuli"
 
@@ -122,29 +124,29 @@ formatted-items:
     material: MELON_SLICE
     display-name: "&fMelon Slice"
     lore:
-      - "&7Farming Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON CROP"
     tags:
       item_id: "melon_slice"
 
   mycelium:
     material: MYCELIUM
-    display-name: "&fMycelium"
+    display-name: "&aMycelium"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON BLOCK"
     tags:
       item_id: "mycelium"
 
   quartz:
     material: QUARTZ
-    display-name: "&fQuartz"
+    display-name: "&aQuartz"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON GEM"
     tags:
       item_id: "quartz"
 
@@ -152,19 +154,19 @@ formatted-items:
     material: NETHERRACK
     display-name: "&fNetherrack"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "netherrack"
 
   obsidian:
     material: OBSIDIAN
-    display-name: "&fObsidian"
+    display-name: "&9Obsidian"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE BLOCK"
     tags:
       item_id: "obsidian"
 
@@ -172,9 +174,9 @@ formatted-items:
     material: PUMPKIN
     display-name: "&fPumpkin"
     lore:
-      - "&7Farming Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON CROP"
     tags:
       item_id: "pumpkin"
 
@@ -182,19 +184,19 @@ formatted-items:
     material: RED_SAND
     display-name: "&fRed Sand"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "red_sand"
 
   redstone:
     material: REDSTONE
-    display-name: "&fRedstone"
+    display-name: "&aRedstone"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON DUST"
     tags:
       item_id: "redstone"
 
@@ -202,9 +204,9 @@ formatted-items:
     material: SAND
     display-name: "&fSand"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "sand"
 
@@ -212,8 +214,8 @@ formatted-items:
     material: SNOW_BLOCK
     display-name: "&fSnow Block"
     lore:
-      - "&7Mining Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "snow_block"

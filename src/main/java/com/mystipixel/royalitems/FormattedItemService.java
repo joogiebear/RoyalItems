@@ -193,7 +193,9 @@ public final class FormattedItemService {
         ph.put("material", material.name());
         ph.put("rarity", rarity.display());
         ph.put("rarity_color", rarity.color());
-        ph.put("category", rule.category() != null ? rule.category() : ph.get("type"));
+        String category = rule.category() != null ? rule.category() : ph.get("type");
+        ph.put("category", category);                                   // as written, for a top descriptor line
+        ph.put("category_upper", category.toUpperCase(Locale.ROOT));    // for the bold RARITY CATEGORY footer
 
         String id = material.name().toLowerCase(Locale.ROOT);
         List<String> lore = new ArrayList<>();
