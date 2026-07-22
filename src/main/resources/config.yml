@@ -1,36 +1,659 @@
 # ─────────────────────────────────────────────────────────────────────────────
-#  RoyalItems
+#  RoyalItems — generated for every RoyalMinions resource. Lore is VISUAL only;
+#  identity is the PDC (item_id / fuel_id). A formatted drop keeps its Material,
+#  so it still stacks/sells/crafts as vanilla. Retune names, lore, and rarity freely.
 #
-#  Dress vanilla drops with lore and a persistent-data identity while keeping the
-#  same Material — so a formatted coal is still Material.COAL to every other plugin
-#  (it stacks, sells, and crafts as coal), it just also carries lore a player can
-#  read and PDC tags a plugin can read.
-#
-#  IDENTITY is the PDC tags (item_id, fuel_id, ...). LORE IS ONLY VISUAL — nothing
-#  reads it for logic. A formatted item will not stack with plain vanilla of the
-#  same kind; that is expected (the lore/tags make it its own stack).
-#
-#  Per item:
-#    material     : the vanilla material to match and produce
-#    display-name : shown name (supports & colour codes)
-#    lore         : shown lore lines (& colour codes; '' is a blank line)
-#    tags         : PDC identity written into the item. item_id defaults to the
-#                   key above; add fuel_id (or anything else) as you like.
-#    format-on    : which drops get dressed — mined (default), mob, harvest.
-#                   Omit to only dress mined-block drops.
+#  format-on: mined (default) | mob | harvest. Combat drops use 'mob'.
 # ─────────────────────────────────────────────────────────────────────────────
 
 formatted-items:
+  acacia_log:
+    material: ACACIA_LOG
+    display-name: "&fAcacia Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "acacia_log"
+
+  beetroot:
+    material: BEETROOT
+    display-name: "&fBeetroot"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "beetroot"
+
+  birch_log:
+    material: BIRCH_LOG
+    display-name: "&fBirch Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "birch_log"
+
+  blaze_rod:
+    material: BLAZE_ROD
+    display-name: "&fBlaze Rod"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "blaze_rod"
+    format-on:
+      - mob
+
+  carrot:
+    material: CARROT
+    display-name: "&fCarrot"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "carrot"
+
+  cherry_log:
+    material: CHERRY_LOG
+    display-name: "&fCherry Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "cherry_log"
+
+  chicken:
+    material: CHICKEN
+    display-name: "&fChicken"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "chicken"
+    format-on:
+      - mob
+
+  clay_ball:
+    material: CLAY_BALL
+    display-name: "&fClay Ball"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "clay_ball"
+
   coal:
     material: COAL
     display-name: "&fCoal"
     lore:
       - "&7Minion Fuel"
-      - "&7Duration: &a30 minutes"
+      - "&7+10% Minion Speed"
+      - "&7Duration: &aForever"
       - ""
       - "&f&lCOMMON"
     tags:
       item_id: "coal"
       fuel_id: "coal"
+
+  cobblestone:
+    material: COBBLESTONE
+    display-name: "&fCobblestone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "cobblestone"
+
+  leather:
+    material: LEATHER
+    display-name: "&fLeather"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "leather"
     format-on:
-      - mined
+      - mob
+
+  gunpowder:
+    material: GUNPOWDER
+    display-name: "&fGunpowder"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "gunpowder"
+    format-on:
+      - mob
+
+  dark_oak_log:
+    material: DARK_OAK_LOG
+    display-name: "&fDark Oak Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "dark_oak_log"
+
+  diamond:
+    material: DIAMOND
+    display-name: "&fDiamond"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "diamond"
+
+  emerald:
+    material: EMERALD
+    display-name: "&fEmerald"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "emerald"
+
+  end_stone:
+    material: END_STONE
+    display-name: "&fEnd Stone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "end_stone"
+
+  ender_pearl:
+    material: ENDER_PEARL
+    display-name: "&fEnder Pearl"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "ender_pearl"
+    format-on:
+      - mob
+
+  cod:
+    material: COD
+    display-name: "&fCod"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "cod"
+
+  salmon:
+    material: SALMON
+    display-name: "&fSalmon"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "salmon"
+
+  pufferfish:
+    material: PUFFERFISH
+    display-name: "&fPufferfish"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "pufferfish"
+
+  tropical_fish:
+    material: TROPICAL_FISH
+    display-name: "&fTropical Fish"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "tropical_fish"
+
+  prismarine_crystals:
+    material: PRISMARINE_CRYSTALS
+    display-name: "&fPrismarine Crystals"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "prismarine_crystals"
+
+  prismarine_shard:
+    material: PRISMARINE_SHARD
+    display-name: "&fPrismarine Shard"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "prismarine_shard"
+
+  sponge:
+    material: SPONGE
+    display-name: "&fSponge"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "sponge"
+
+  ghast_tear:
+    material: GHAST_TEAR
+    display-name: "&fGhast Tear"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "ghast_tear"
+    format-on:
+      - mob
+
+  glowstone_dust:
+    material: GLOWSTONE_DUST
+    display-name: "&fGlowstone Dust"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "glowstone_dust"
+
+  gold_ingot:
+    material: GOLD_INGOT
+    display-name: "&fGold Ingot"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "gold_ingot"
+
+  gravel:
+    material: GRAVEL
+    display-name: "&fGravel"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "gravel"
+
+  ice:
+    material: ICE
+    display-name: "&fIce"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "ice"
+
+  iron_ingot:
+    material: IRON_INGOT
+    display-name: "&fIron Ingot"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "iron_ingot"
+
+  jungle_log:
+    material: JUNGLE_LOG
+    display-name: "&fJungle Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "jungle_log"
+
+  kelp:
+    material: KELP
+    display-name: "&fKelp"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "kelp"
+
+  lapis_lazuli:
+    material: LAPIS_LAZULI
+    display-name: "&fLapis Lazuli"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "lapis_lazuli"
+
+  lily_pad:
+    material: LILY_PAD
+    display-name: "&fLily Pad"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "lily_pad"
+
+  magma_cream:
+    material: MAGMA_CREAM
+    display-name: "&fMagma Cream"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "magma_cream"
+    format-on:
+      - mob
+
+  mangrove_log:
+    material: MANGROVE_LOG
+    display-name: "&fMangrove Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "mangrove_log"
+
+  melon_slice:
+    material: MELON_SLICE
+    display-name: "&fMelon Slice"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "melon_slice"
+
+  red_mushroom:
+    material: RED_MUSHROOM
+    display-name: "&fRed Mushroom"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "red_mushroom"
+
+  brown_mushroom:
+    material: BROWN_MUSHROOM
+    display-name: "&fBrown Mushroom"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "brown_mushroom"
+
+  mycelium:
+    material: MYCELIUM
+    display-name: "&fMycelium"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "mycelium"
+
+  quartz:
+    material: QUARTZ
+    display-name: "&fQuartz"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "quartz"
+
+  nether_wart:
+    material: NETHER_WART
+    display-name: "&fNether Wart"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "nether_wart"
+
+  netherrack:
+    material: NETHERRACK
+    display-name: "&fNetherrack"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "netherrack"
+
+  oak_log:
+    material: OAK_LOG
+    display-name: "&fOak Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "oak_log"
+
+  obsidian:
+    material: OBSIDIAN
+    display-name: "&fObsidian"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "obsidian"
+
+  porkchop:
+    material: PORKCHOP
+    display-name: "&fPorkchop"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "porkchop"
+    format-on:
+      - mob
+
+  potato:
+    material: POTATO
+    display-name: "&fPotato"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "potato"
+
+  pumpkin:
+    material: PUMPKIN
+    display-name: "&fPumpkin"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "pumpkin"
+
+  rabbit_hide:
+    material: RABBIT_HIDE
+    display-name: "&fRabbit Hide"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "rabbit_hide"
+    format-on:
+      - mob
+
+  red_sand:
+    material: RED_SAND
+    display-name: "&fRed Sand"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "red_sand"
+
+  redstone:
+    material: REDSTONE
+    display-name: "&fRedstone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "redstone"
+
+  sand:
+    material: SAND
+    display-name: "&fSand"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "sand"
+
+  sea_pickle:
+    material: SEA_PICKLE
+    display-name: "&fSea Pickle"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "sea_pickle"
+
+  mutton:
+    material: MUTTON
+    display-name: "&fMutton"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "mutton"
+    format-on:
+      - mob
+
+  bone:
+    material: BONE
+    display-name: "&fBone"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "bone"
+    format-on:
+      - mob
+
+  slime_ball:
+    material: SLIME_BALL
+    display-name: "&fSlime Ball"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "slime_ball"
+    format-on:
+      - mob
+
+  snow_block:
+    material: SNOW_BLOCK
+    display-name: "&fSnow Block"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "snow_block"
+
+  string:
+    material: STRING
+    display-name: "&fString"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "string"
+    format-on:
+      - mob
+
+  spruce_log:
+    material: SPRUCE_LOG
+    display-name: "&fSpruce Log"
+    lore:
+      - "&7Foraging Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "spruce_log"
+
+  ink_sac:
+    material: INK_SAC
+    display-name: "&fInk Sac"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "ink_sac"
+
+  wheat:
+    material: WHEAT
+    display-name: "&fWheat"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "wheat"
+
+  rotten_flesh:
+    material: ROTTEN_FLESH
+    display-name: "&fRotten Flesh"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "rotten_flesh"
+    format-on:
+      - mob
