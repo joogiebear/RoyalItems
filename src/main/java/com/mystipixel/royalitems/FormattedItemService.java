@@ -49,6 +49,8 @@ public final class FormattedItemService {
     private final Map<Material, FormattedItemDefinition> byMaterial = new EnumMap<>(Material.class);
     private final Map<String, ItemStack> templates = new HashMap<>();   // id -> prebuilt stack (amount 1)
     private final Map<String, NamespacedKey> tagKeys = new HashMap<>(); // tag name -> cached key
+    private final Map<String, Rarity> rarities = new HashMap<>();       // rarity id -> tier
+    private final List<FormattingRule> rules = new ArrayList<>();       // expanded over materials at load
 
     public FormattedItemService(Plugin plugin) {
         this.plugin = plugin;
@@ -59,21 +61,65 @@ public final class FormattedItemService {
     // ------------------------------------------------------------------ config
 
     /**
-     * (Re)load every definition: an optional {@code formatted-items} catch-all in config.yml, then every
-     * {@code items/**.yml} file (recursively, so you can group them into folders). Later files never
-     * override an id or material already claimed — the first definition wins, and a clash is logged.
+     * (Re)load everything: rarities, the explicit {@code formatted-items} (config.yml catch-all, then
+     * every {@code items/**.yml}), and the {@code rules} — which are expanded over every material into
+     * concrete definitions. Explicit items always win over a rule, and the first claim of an id or
+     * material wins over any later one. So runtime is only ever a map lookup; the expansion is one-time.
      */
     public void reload() {
         byId.clear();
         byMaterial.clear();
         templates.clear();
+        rarities.clear();
+        rules.clear();
+
+        loadRarities(plugin.getConfig().getConfigurationSection("rarities"));
+        loadRarities(fileSection("rarities.yml", "rarities"));
+
         loadSection(plugin.getConfig().getConfigurationSection("formatted-items"));
-        int files = 0;
         for (File file : yamlFiles(new File(plugin.getDataFolder(), "items"))) {
             loadSection(YamlConfiguration.loadConfiguration(file).getConfigurationSection("formatted-items"));
-            files++;
         }
-        logger.info("Loaded " + byId.size() + " formatted item(s) from " + files + " file(s).");
+        int explicit = byId.size();
+
+        loadRules(plugin.getConfig().getConfigurationSection("rules"));
+        loadRules(fileSection("rules.yml", "rules"));
+        int expanded = expandRules();
+
+        logger.info("Loaded " + byId.size() + " item(s): " + explicit + " defined, " + expanded
+                + " from " + rules.size() + " rule(s), " + rarities.size() + " rarities.");
+    }
+
+    private ConfigurationSection fileSection(String fileName, String key) {
+        File file = new File(plugin.getDataFolder(), fileName);
+        return file.isFile() ? YamlConfiguration.loadConfiguration(file).getConfigurationSection(key) : null;
+    }
+
+    private void loadRarities(ConfigurationSection sec) {
+        if (sec == null) {
+            return;
+        }
+        for (String id : sec.getKeys(false)) {
+            ConfigurationSection r = sec.getConfigurationSection(id);
+            if (r == null) {
+                continue;
+            }
+            String key = id.toLowerCase(Locale.ROOT);
+            rarities.putIfAbsent(key, new Rarity(key, r.getString("display", "&f&l" + id.toUpperCase(Locale.ROOT)),
+                    r.getString("color", "&f")));
+        }
+    }
+
+    private void loadRules(ConfigurationSection sec) {
+        if (sec == null) {
+            return;
+        }
+        for (String id : sec.getKeys(false)) {
+            ConfigurationSection r = sec.getConfigurationSection(id);
+            if (r != null) {
+                rules.add(FormattingRule.parse(r));
+            }
+        }
     }
 
     private void loadSection(ConfigurationSection items) {
@@ -86,21 +132,89 @@ public final class FormattedItemService {
                 continue;
             }
             FormattedItemDefinition def = parse(id.toLowerCase(Locale.ROOT), sec);
-            if (def == null) {
-                continue;
+            if (def != null) {
+                register(def);
             }
-            if (byId.containsKey(def.id())) {
-                logger.warning("Duplicate formatted-item id '" + def.id() + "' — keeping the first.");
-                continue;
-            }
-            byId.put(def.id(), def);
-            FormattedItemDefinition prev = byMaterial.putIfAbsent(def.material(), def);
-            if (prev != null) {
-                logger.warning("Both '" + prev.id() + "' and '" + def.id() + "' format " + def.material()
-                        + "; drops of it will use '" + prev.id() + "'.");
-            }
-            templates.put(def.id(), build(def, 1));
         }
+    }
+
+    /** Expand every rule over all real items, dressing each material the first matching rule claims. */
+    private int expandRules() {
+        int count = 0;
+        for (Material material : Material.values()) {
+            if (!material.isItem() || byMaterial.containsKey(material)) {
+                continue;   // not an obtainable item, or already claimed by an explicit entry / earlier rule
+            }
+            for (FormattingRule rule : rules) {
+                if (rule.matches(material) && register(expand(rule, material))) {
+                    count++;
+                    break;
+                }
+            }
+        }
+        return count;
+    }
+
+    private FormattedItemDefinition expand(FormattingRule rule, Material material) {
+        Rarity rarity = rarities.getOrDefault(rule.rarityFor(material), Rarity.DEFAULT);
+        String[] parts = material.name().split("_");
+        Map<String, String> ph = new HashMap<>();
+        ph.put("name", title(material.name()));
+        ph.put("type", title(parts[parts.length - 1]));
+        ph.put("material", material.name());
+        ph.put("rarity", rarity.display());
+        ph.put("rarity_color", rarity.color());
+        ph.put("category", rule.category() != null ? rule.category() : ph.get("type"));
+
+        String id = material.name().toLowerCase(Locale.ROOT);
+        List<String> lore = new ArrayList<>();
+        for (String line : rule.loreTemplate()) {
+            lore.add(apply(line, ph));
+        }
+        Map<String, String> tags = new LinkedHashMap<>();
+        tags.put("item_id", id);
+        for (Map.Entry<String, String> e : rule.extraTags().entrySet()) {
+            tags.put(e.getKey(), apply(e.getValue(), ph));
+        }
+        return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags, rule.sources());
+    }
+
+    /** Add a definition; false if its id was already taken (a material clash keeps the first, and logs). */
+    private boolean register(FormattedItemDefinition def) {
+        if (byId.containsKey(def.id())) {
+            logger.warning("Duplicate formatted-item id '" + def.id() + "' — keeping the first.");
+            return false;
+        }
+        byId.put(def.id(), def);
+        FormattedItemDefinition prev = byMaterial.putIfAbsent(def.material(), def);
+        if (prev != null) {
+            logger.warning("Both '" + prev.id() + "' and '" + def.id() + "' format " + def.material()
+                    + "; drops of it will use '" + prev.id() + "'.");
+        }
+        templates.put(def.id(), build(def, 1));
+        return true;
+    }
+
+    private static String title(String raw) {
+        StringBuilder sb = new StringBuilder();
+        for (String word : raw.toLowerCase(Locale.ROOT).split("_")) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        return sb.toString();
+    }
+
+    private static String apply(String template, Map<String, String> placeholders) {
+        String out = template;
+        for (Map.Entry<String, String> e : placeholders.entrySet()) {
+            out = out.replace("%" + e.getKey() + "%", e.getValue());
+        }
+        return out;
     }
 
     /** Every {@code .yml} under {@code dir} (recursively), skipping {@code _}-prefixed template files. */

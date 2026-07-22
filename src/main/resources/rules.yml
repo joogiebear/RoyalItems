@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  RoyalItems — rules. One rule dresses a whole family of items, so "every tool and
+#  every armour piece" is a few blocks instead of hundreds of entries. At load each
+#  rule is expanded over every matching material into a concrete formatted item, so
+#  runtime cost is unchanged. An explicit items/*.yml entry always wins over a rule.
+#
+#  Match by:
+#    match     : material-name globs — '*_SWORD', 'DIAMOND_*', '*'
+#    materials : an explicit list of materials
+#  Rarity:
+#    rarity      : a flat rarity id (from rarities.yml), OR
+#    tier-rarity : a material-name prefix -> rarity, so DIAMOND_* is rare, NETHERITE_* epic
+#  Templates (placeholders: %name% %type% %rarity% %rarity_color% %material% %category%):
+#    display-name, lore, tags
+#  format-on : which creation events dress it — craft, smith, mined, mob, harvest
+# ─────────────────────────────────────────────────────────────────────────────
+
+rules:
+  # Every tool and every armour piece, rarity by material tier.
+  gear:
+    match:
+      - "*_SWORD"
+      - "*_PICKAXE"
+      - "*_AXE"
+      - "*_SHOVEL"
+      - "*_HOE"
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+    tier-rarity:
+      WOODEN: common
+      STONE: common
+      LEATHER: common
+      GOLDEN: uncommon
+      CHAINMAIL: uncommon
+      IRON: uncommon
+      DIAMOND: rare
+      TURTLE: rare
+      NETHERITE: epic
+    display-name: "%rarity_color%%name%"
+    lore:
+      - "&7%type%"
+      - ""
+      - "%rarity%"
+    format-on:
+      - craft
+      - smith
+
+  # Ranged and off-hand gear.
+  weapons:
+    materials:
+      - BOW
+      - CROSSBOW
+      - TRIDENT
+      - SHIELD
+      - FISHING_ROD
+      - SHEARS
+      - FLINT_AND_STEEL
+    rarity: uncommon
+    display-name: "%rarity_color%%name%"
+    lore:
+      - "&7%type%"
+      - ""
+      - "%rarity%"
+    format-on:
+      - craft

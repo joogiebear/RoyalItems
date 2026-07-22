@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  RoyalItems — rarity ladder. Referenced by rules (rules.yml) via %rarity% /
+#  %rarity_color%. Retune the whole game's rarity colours in one place here.
+#    display : the line shown at the foot of an item's lore
+#    color   : the colour a rule may tint a name with (%rarity_color%)
+# ─────────────────────────────────────────────────────────────────────────────
+
+rarities:
+  common:
+    display: "&f&lCOMMON"
+    color: "&f"
+  uncommon:
+    display: "&a&lUNCOMMON"
+    color: "&a"
+  rare:
+    display: "&9&lRARE"
+    color: "&9"
+  epic:
+    display: "&5&lEPIC"
+    color: "&5"
+  legendary:
+    display: "&6&lLEGENDARY"
+    color: "&6"
+  mythic:
+    display: "&d&lMYTHIC"
+    color: "&d"

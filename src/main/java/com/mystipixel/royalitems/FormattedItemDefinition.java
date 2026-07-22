@@ -15,15 +15,17 @@ import java.util.Set;
  */
 public final class FormattedItemDefinition {
 
-    /** Where a formatted drop may come from. */
+    /** Where a formatted item may be created — a drop, or a craft/smith bench. */
     public enum Source {
-        MINED, MOB, HARVEST;
+        MINED, MOB, HARVEST, CRAFT, SMITH;
 
-        static Source from(String raw) {
+        public static Source from(String raw) {
             return switch (raw == null ? "" : raw.trim().toLowerCase()) {
                 case "mined", "mine", "block", "break" -> MINED;
                 case "mob", "kill", "entity", "death" -> MOB;
                 case "harvest", "harvested" -> HARVEST;
+                case "craft", "crafted", "workbench" -> CRAFT;
+                case "smith", "smithing", "upgrade" -> SMITH;
                 default -> null;
             };
         }

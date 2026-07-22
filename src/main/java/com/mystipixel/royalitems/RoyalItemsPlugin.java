@@ -28,7 +28,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         service.reload();
 
         getServer().getServicesManager().register(FormattedItemService.class, service, this, ServicePriority.Normal);
-        getServer().getPluginManager().registerEvents(new DropFormatListener(service), this);
+        getServer().getPluginManager().registerEvents(new FormatListener(service), this);
 
         ItemCommand command = new ItemCommand(this, service);
         getCommand("royalitems").setExecutor(command);
@@ -49,10 +49,16 @@ public final class RoyalItemsPlugin extends JavaPlugin {
     }
 
     /**
-     * Drop the bundled {@code items/*.yml} into the data folder on first run, without overwriting edits —
-     * enumerated from the jar so new category files ship automatically as the bundle grows.
+     * Drop the bundled defaults into the data folder on first run, without overwriting edits: the
+     * rarity ladder, the rules, and every {@code items/*.yml} (enumerated from the jar so new category
+     * files ship automatically as the bundle grows).
      */
     private void copyDefaultItems() {
+        for (String top : new String[]{"rarities.yml", "rules.yml"}) {
+            if (!new File(getDataFolder(), top).exists()) {
+                saveResource(top, false);
+            }
+        }
         try (JarFile jar = new JarFile(getFile())) {
             Enumeration<JarEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
