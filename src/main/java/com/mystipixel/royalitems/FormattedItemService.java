@@ -2,11 +2,14 @@ package com.mystipixel.royalitems;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -18,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,10 +44,15 @@ public final class FormattedItemService {
     public static final String FUEL_ID = "fuel_id";
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+    private static final MiniMessage MINI = MiniMessage.miniMessage();
 
     private final Plugin plugin;
     private final Logger logger;
     private final NamespacedKey itemIdKey;
+
+    private boolean globalEnabled = true;
+    private boolean formatOnJoin;
+    private final Set<String> disabledWorlds = new HashSet<>();
 
     private final Map<String, FormattedItemDefinition> byId = new HashMap<>();
     private final Map<Material, FormattedItemDefinition> byMaterial = new EnumMap<>(Material.class);
@@ -72,6 +81,13 @@ public final class FormattedItemService {
         templates.clear();
         rarities.clear();
         rules.clear();
+
+        globalEnabled = plugin.getConfig().getBoolean("enabled", true);
+        formatOnJoin = plugin.getConfig().getBoolean("format-on-join", false);
+        disabledWorlds.clear();
+        for (String w : plugin.getConfig().getStringList("disabled-worlds")) {
+            disabledWorlds.add(w.toLowerCase(Locale.ROOT));
+        }
 
         loadRarities(plugin.getConfig().getConfigurationSection("rarities"));
         loadRarities(fileSection("rarities.yml", "rarities"));
@@ -279,12 +295,12 @@ public final class FormattedItemService {
         ItemStack item = new ItemStack(def.material(), Math.max(1, amount));
         ItemMeta meta = item.getItemMeta();
         if (def.displayName() != null) {
-            meta.displayName(noItalic(LEGACY.deserialize(def.displayName())));
+            meta.displayName(text(def.displayName()));
         }
         if (!def.lore().isEmpty()) {
             List<Component> lines = new ArrayList<>();
             for (String line : def.lore()) {
-                lines.add(noItalic(LEGACY.deserialize(line)));
+                lines.add(text(line));
             }
             meta.lore(lines);
         }
@@ -296,9 +312,31 @@ public final class FormattedItemService {
         return item;
     }
 
-    /** Item name/lore render italic by default; reset it so a formatted item reads like a real one. */
-    private static Component noItalic(Component c) {
+    /**
+     * Render a config string: MiniMessage when it contains a tag ({@code <red>}, {@code <#ff00ff>},
+     * {@code <gradient:..>}), otherwise legacy {@code &} codes — and always non-italic, so a formatted
+     * item reads like a real one.
+     */
+    private static Component text(String s) {
+        Component c = looksMiniMessage(s) ? MINI.deserialize(s) : LEGACY.deserialize(s);
         return c.decoration(TextDecoration.ITALIC, false);
+    }
+
+    private static boolean looksMiniMessage(String s) {
+        int open = s.indexOf('<');
+        return open >= 0 && s.indexOf('>', open) > open;
+    }
+
+    // ------------------------------------------------------------------ settings
+
+    /** Whether formatting is on in this world (the global toggle and the disabled-worlds list). */
+    public boolean worldEnabled(World world) {
+        return globalEnabled && (world == null || !disabledWorlds.contains(world.getName().toLowerCase(Locale.ROOT)));
+    }
+
+    /** Whether to dress a player's inventory when they join. */
+    public boolean formatOnJoin() {
+        return formatOnJoin;
     }
 
     // ------------------------------------------------------------------ public API
@@ -356,6 +394,23 @@ public final class FormattedItemService {
             return stack;
         }
         return format(def.id(), stack.getAmount());
+    }
+
+    /** Dress every supported plain item in a player's inventory; returns how many stacks changed. */
+    public int formatInventory(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+        int changed = 0;
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack formatted = formatIfSupported(contents[i]);
+            if (formatted != contents[i]) {
+                contents[i] = formatted;
+                changed++;
+            }
+        }
+        if (changed > 0) {
+            player.getInventory().setContents(contents);
+        }
+        return changed;
     }
 
     private boolean looksCustom(ItemStack stack) {

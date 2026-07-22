@@ -36,9 +36,33 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             case "give" -> give(sender, args);
             case "reload" -> reload(sender);
             case "info" -> info(sender);
+            case "formatinv" -> formatInv(sender, args);
             default -> usage(sender, label);
         }
         return true;
+    }
+
+    private void formatInv(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("royalitems.formatinv")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            return;
+        }
+        Player target;
+        if (args.length >= 2) {
+            target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' is not online.");
+                return;
+            }
+        } else if (sender instanceof Player self) {
+            target = self;
+        } else {
+            sender.sendMessage(ChatColor.GRAY + "Usage: /royalitems formatinv <player>");
+            return;
+        }
+        int changed = service.formatInventory(target);
+        sender.sendMessage(ChatColor.GREEN + "Dressed " + changed + " stack(s) in "
+                + target.getName() + "'s inventory.");
     }
 
     private void give(CommandSender sender, String[] args) {
@@ -125,7 +149,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     }
 
     private void usage(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info>");
+        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv>");
     }
 
     @Override
@@ -142,7 +166,17 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("royalitems.admin")) {
                 subs.add("info");
             }
+            if (sender.hasPermission("royalitems.formatinv")) {
+                subs.add("formatinv");
+            }
             return filter(subs, args[0]);
+        }
+        if (args[0].equalsIgnoreCase("formatinv") && args.length == 2) {
+            List<String> names = new ArrayList<>();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                names.add(p.getName());
+            }
+            return filter(names, args[1]);
         }
         if (args[0].equalsIgnoreCase("give")) {
             if (args.length == 2) {

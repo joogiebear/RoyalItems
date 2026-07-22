@@ -1,10 +1,23 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #  RoyalItems
 #
-#  Formatted items live in the items/ folder, one file per category — edit or add
-#  files there (subfolders are scanned too) and run /royalitems reload.
+#  Formatted items live in the items/ folder (one file per category); rules that
+#  dress whole families live in rules.yml; the rarity ladder in rarities.yml. Edit
+#  any of them and run /royalitems reload.
 #
 #  Identity is the PDC tags (item_id, fuel_id, ...); LORE IS ONLY VISUAL. A formatted
-#  item keeps its Material, so it stacks/sells/crafts as vanilla. A formatted-items:
-#  section here still works too, as a global catch-all.
+#  item keeps its Material, so it stacks/sells/crafts as vanilla. Names and lore
+#  accept legacy '&' codes OR MiniMessage (<red>, <#ff00ff>, <gradient:..>) — a line
+#  with a <tag> is read as MiniMessage, otherwise as '&' codes.
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Master switch.
+enabled: true
+
+# Worlds where RoyalItems does nothing (by name, case-insensitive).
+disabled-worlds: []
+
+# Dress a player's whole inventory when they join, so items they already own get
+# formatted too (uses the same guard, so custom items are never touched). Off by
+# default; /royalitems formatinv <player> does the same on demand.
+format-on-join: false

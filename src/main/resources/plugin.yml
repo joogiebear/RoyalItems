@@ -16,9 +16,13 @@ permissions:
     children:
       royalitems.give: true
       royalitems.reload: true
+      royalitems.formatinv: true
   royalitems.give:
     description: Give formatted items.
     default: op
   royalitems.reload:
     description: Reload the RoyalItems config.
+    default: op
+  royalitems.formatinv:
+    description: Dress the items already in a player's inventory.
     default: op

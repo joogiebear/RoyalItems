@@ -65,3 +65,19 @@ rules:
       - "%rarity%"
     format-on:
       - craft
+
+  # Catch-all example (disabled). A rule matching '*' dresses EVERY remaining item —
+  # explicit items/ entries and earlier rules still win, so this only fills the gaps.
+  # Uncomment to give literally everything an identity. MiniMessage works here too.
+  # everything:
+  #   match:
+  #     - "*"
+  #   rarity: common
+  #   display-name: "%name%"
+  #   lore:
+  #     - "<gradient:#55ffff:#5555ff>%category%</gradient>"
+  #     - ""
+  #     - "%rarity%"
+  #   format-on:
+  #     - mined
+  #     - craft
