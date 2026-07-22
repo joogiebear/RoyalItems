@@ -11,7 +11,20 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.AxolotlBucketMeta;
+import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.BundleMeta;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.inventory.meta.MusicInstrumentMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.SuspiciousStewMeta;
+import org.bukkit.inventory.meta.TropicalFishBucketMeta;
+import org.bukkit.inventory.meta.WritableBookMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
@@ -419,7 +432,31 @@ public final class FormattedItemService {
         }
         ItemMeta meta = stack.getItemMeta();
         return meta.hasDisplayName() || meta.hasLore() || meta.hasEnchants()
-                || !meta.getPersistentDataContainer().isEmpty();
+                || !meta.getPersistentDataContainer().isEmpty()
+                || hasDynamicState(meta);
+    }
+
+    /**
+     * True for items whose vanilla name or state IS their identity — a potion's effect, an enchanted
+     * book's enchants, a written book, a map, a firework, a stew, a goat horn, a head, a bundle, a fish
+     * bucket, a banner. These are never dressed (even under a catch-all rule), so a "Potion of Healing"
+     * never becomes just "Potion". Gear that carries specialised meta (a crossbow, a shield) is NOT
+     * listed here, so it still formats.
+     */
+    private static boolean hasDynamicState(ItemMeta meta) {
+        return meta instanceof PotionMeta
+                || meta instanceof EnchantmentStorageMeta
+                || meta instanceof WritableBookMeta
+                || meta instanceof MapMeta
+                || meta instanceof FireworkMeta
+                || meta instanceof FireworkEffectMeta
+                || meta instanceof SuspiciousStewMeta
+                || meta instanceof MusicInstrumentMeta
+                || meta instanceof SkullMeta
+                || meta instanceof BundleMeta
+                || meta instanceof AxolotlBucketMeta
+                || meta instanceof TropicalFishBucketMeta
+                || meta instanceof BannerMeta;
     }
 
     private NamespacedKey key(String name) {

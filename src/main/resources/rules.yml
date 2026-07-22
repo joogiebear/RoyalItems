@@ -385,18 +385,20 @@ rules:
       - craft
       - mob
 
-  # ── Catch-all example (disabled). '*' dresses EVERY remaining item; explicit
-  # ── items and earlier rules still win, so it only fills the gaps. MiniMessage
-  # ── works here too. Uncomment to give literally everything an identity.
-  # everything:
-  #   match:
-  #     - '*'
-  #   rarity: common
-  #   display-name: '%name%'
-  #   lore:
-  #     - '<gradient:#55ffff:#5555ff>%category%</gradient>'
-  #     - ''
-  #     - '%rarity%'
-  #   format-on:
-  #     - mined
-  #     - craft
+  # ── Catch-all: dress EVERY remaining item. Explicit items and earlier rules
+  # ── still win, so this only fills the gaps. Items with dynamic vanilla state
+  # ── (potions, enchanted/written books, maps, heads, banners, fireworks, ...)
+  # ── are always skipped, so their real name/contents are never overwritten.
+  everything:
+    match:
+      - '*'
+    rarity: common
+    display-name: '%name%'
+    lore:
+      - '&7%type%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+      - mob
