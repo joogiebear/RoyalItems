@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  RoyalItems
+#
+#  Dress vanilla drops with lore and a persistent-data identity while keeping the
+#  same Material — so a formatted coal is still Material.COAL to every other plugin
+#  (it stacks, sells, and crafts as coal), it just also carries lore a player can
+#  read and PDC tags a plugin can read.
+#
+#  IDENTITY is the PDC tags (item_id, fuel_id, ...). LORE IS ONLY VISUAL — nothing
+#  reads it for logic. A formatted item will not stack with plain vanilla of the
+#  same kind; that is expected (the lore/tags make it its own stack).
+#
+#  Per item:
+#    material     : the vanilla material to match and produce
+#    display-name : shown name (supports & colour codes)
+#    lore         : shown lore lines (& colour codes; '' is a blank line)
+#    tags         : PDC identity written into the item. item_id defaults to the
+#                   key above; add fuel_id (or anything else) as you like.
+#    format-on    : which drops get dressed — mined (default), mob, harvest.
+#                   Omit to only dress mined-block drops.
+# ─────────────────────────────────────────────────────────────────────────────
+
+formatted-items:
+  coal:
+    material: COAL
+    display-name: "&fCoal"
+    lore:
+      - "&7Minion Fuel"
+      - "&7Duration: &a30 minutes"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "coal"
+      fuel_id: "coal"
+    format-on:
+      - mined

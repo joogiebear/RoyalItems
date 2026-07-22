@@ -1,0 +1,24 @@
+name: RoyalItems
+version: ${version}
+main: com.mystipixel.royalitems.RoyalItemsPlugin
+api-version: '1.21'
+author: Mystipixel
+description: Dresses vanilla drops with lore and a PDC identity (item_id / fuel_id) for RoyalMC.
+commands:
+  royalitems:
+    description: Give, reload, and inspect formatted items.
+    usage: /royalitems <give|reload|info>
+    aliases: [ritems, rit]
+permissions:
+  royalitems.admin:
+    description: All RoyalItems admin tools, and /royalitems info.
+    default: op
+    children:
+      royalitems.give: true
+      royalitems.reload: true
+  royalitems.give:
+    description: Give formatted items.
+    default: op
+  royalitems.reload:
+    description: Reload the RoyalItems config.
+    default: op
