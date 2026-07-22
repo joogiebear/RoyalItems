@@ -1,33 +1,30 @@
 # ─────────────────────────────────────────────────────────────────────────────
-#  RoyalItems — rules. One rule dresses a whole family of items, so "every tool and
-#  every armour piece" is a few blocks instead of hundreds of entries. At load each
-#  rule is expanded over every matching material into a concrete formatted item, so
-#  runtime cost is unchanged. An explicit items/*.yml entry always wins over a rule.
+#  RoyalItems — rules. One rule dresses a whole family of items, so broad coverage
+#  is a handful of blocks, not hundreds of entries. Rules are expanded over every
+#  matching material at load, so runtime cost is unchanged. An explicit items/*.yml
+#  entry always wins over a rule, and earlier rules win over later ones.
 #
-#  Match by:
-#    match     : material-name globs — '*_SWORD', 'DIAMOND_*', '*'
-#    materials : an explicit list of materials
-#  Rarity:
-#    rarity      : a flat rarity id (from rarities.yml), OR
-#    tier-rarity : a material-name prefix -> rarity, so DIAMOND_* is rare, NETHERITE_* epic
-#  Templates (placeholders: %name% %type% %rarity% %rarity_color% %material% %category%):
-#    display-name, lore, tags
-#  format-on : which creation events dress it — craft, smith, mined, mob, harvest
+#  Match by:  match (globs like '*_WOOL', 'DIAMOND_*', '*')  /  materials (a list)
+#  Rarity:    rarity (flat)  OR  tier-rarity (material-name prefix -> rarity)
+#  Templates (placeholders %name% %type% %rarity% %rarity_color% %material% %category%):
+#             display-name, lore, tags
+#  format-on: craft, smith, mined, mob, harvest
 # ─────────────────────────────────────────────────────────────────────────────
 
 rules:
-  # Every tool and every armour piece, rarity by material tier.
+
+  # ── gear: every tool and armour piece, rarity by material tier ─────────────
   gear:
     match:
-      - "*_SWORD"
-      - "*_PICKAXE"
-      - "*_AXE"
-      - "*_SHOVEL"
-      - "*_HOE"
-      - "*_HELMET"
-      - "*_CHESTPLATE"
-      - "*_LEGGINGS"
-      - "*_BOOTS"
+      - '*_SWORD'
+      - '*_PICKAXE'
+      - '*_AXE'
+      - '*_SHOVEL'
+      - '*_HOE'
+      - '*_HELMET'
+      - '*_CHESTPLATE'
+      - '*_LEGGINGS'
+      - '*_BOOTS'
     tier-rarity:
       WOODEN: common
       STONE: common
@@ -38,16 +35,15 @@ rules:
       DIAMOND: rare
       TURTLE: rare
       NETHERITE: epic
-    display-name: "%rarity_color%%name%"
+    display-name: '%rarity_color%%name%'
     lore:
-      - "&7%type%"
-      - ""
-      - "%rarity%"
+      - '&7%type%'
+      - ''
+      - '%rarity%'
     format-on:
       - craft
       - smith
 
-  # Ranged and off-hand gear.
   weapons:
     materials:
       - BOW
@@ -58,26 +54,349 @@ rules:
       - SHEARS
       - FLINT_AND_STEEL
     rarity: uncommon
-    display-name: "%rarity_color%%name%"
+    display-name: '%rarity_color%%name%'
     lore:
-      - "&7%type%"
-      - ""
-      - "%rarity%"
+      - '&7%type%'
+      - ''
+      - '%rarity%'
     format-on:
       - craft
 
-  # Catch-all example (disabled). A rule matching '*' dresses EVERY remaining item —
-  # explicit items/ entries and earlier rules still win, so this only fills the gaps.
-  # Uncomment to give literally everything an identity. MiniMessage works here too.
+  # ── metals, gems, raw ores (iron/gold/diamond/etc. are explicit resources) ──
+  metals:
+    match:
+      - 'RAW_*'
+      - '*_INGOT'
+      - 'NETHERITE_SCRAP'
+      - 'AMETHYST_SHARD'
+      - 'ECHO_SHARD'
+      - 'COPPER_*'
+    tier-rarity:
+      RAW: common
+      COPPER: common
+      IRON: uncommon
+      GOLD: uncommon
+      AMETHYST: uncommon
+      ECHO: rare
+      NETHERITE: epic
+    rarity: uncommon
+    category: Material
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+      - mob
+
+  # ── decorative colour families (all 16 dye colours per rule) ────────────────
+  wool:
+    match:
+      - '*_WOOL'
+    rarity: common
+    category: Wool
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - craft
+      - mined
+      - mob
+
+  dyes:
+    match:
+      - '*_DYE'
+    rarity: common
+    category: Dye
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - craft
+      - mined
+
+  concrete:
+    match:
+      - '*_CONCRETE'
+      - '*_CONCRETE_POWDER'
+    rarity: common
+    category: Block
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+
+  terracotta:
+    match:
+      - '*_TERRACOTTA'
+      - 'TERRACOTTA'
+    rarity: common
+    category: Block
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+
+  glass:
+    match:
+      - '*_STAINED_GLASS'
+      - '*_STAINED_GLASS_PANE'
+      - 'GLASS'
+      - 'GLASS_PANE'
+      - 'TINTED_GLASS'
+    rarity: common
+    category: Block
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+
+  furnishings:
+    match:
+      - '*_CARPET'
+      - '*_CANDLE'
+      - 'CANDLE'
+      - '*_BED'
+    rarity: common
+    category: Furnishing
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - craft
+      - mined
+
+  # ── wood (logs are explicit foraging resources) ─────────────────────────────
+  wood:
+    match:
+      - '*_PLANKS'
+      - 'STRIPPED_*'
+      - '*_WOOD'
+      - '*_HYPHAE'
+      - '*_STEM'
+    rarity: common
+    category: Wood
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+
+  # ── stone & building bases ──────────────────────────────────────────────────
+  stone:
+    materials:
+      - STONE
+      - SMOOTH_STONE
+      - STONE_BRICKS
+      - MOSSY_STONE_BRICKS
+      - MOSSY_COBBLESTONE
+      - GRANITE
+      - POLISHED_GRANITE
+      - DIORITE
+      - POLISHED_DIORITE
+      - ANDESITE
+      - POLISHED_ANDESITE
+      - DEEPSLATE
+      - COBBLED_DEEPSLATE
+      - POLISHED_DEEPSLATE
+      - DEEPSLATE_BRICKS
+      - DEEPSLATE_TILES
+      - TUFF
+      - CALCITE
+      - DRIPSTONE_BLOCK
+      - BASALT
+      - SMOOTH_BASALT
+      - BLACKSTONE
+      - POLISHED_BLACKSTONE
+      - SANDSTONE
+      - RED_SANDSTONE
+      - PRISMARINE
+      - PRISMARINE_BRICKS
+      - DARK_PRISMARINE
+      - MAGMA_BLOCK
+      - OBSIDIAN
+      - CRYING_OBSIDIAN
+    rarity: common
+    category: Block
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+
+  # ── food ────────────────────────────────────────────────────────────────────
+  food:
+    match:
+      - 'COOKED_*'
+    materials:
+      - BREAD
+      - APPLE
+      - COOKIE
+      - PUMPKIN_PIE
+      - MELON_SLICE
+      - GLOW_BERRIES
+      - SWEET_BERRIES
+      - HONEY_BOTTLE
+      - MUSHROOM_STEW
+      - RABBIT_STEW
+      - BEETROOT_SOUP
+      - DRIED_KELP
+      - BAKED_POTATO
+      - BEEF
+      - PORKCHOP
+      - MUTTON
+      - RABBIT
+    rarity: common
+    category: Food
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - craft
+      - mob
+
+  # ── redstone machines & components ──────────────────────────────────────────
+  redstone:
+    materials:
+      - REPEATER
+      - COMPARATOR
+      - REDSTONE_TORCH
+      - REDSTONE_LAMP
+      - PISTON
+      - STICKY_PISTON
+      - OBSERVER
+      - DISPENSER
+      - DROPPER
+      - TARGET
+      - LEVER
+      - TRIPWIRE_HOOK
+      - DAYLIGHT_DETECTOR
+    rarity: uncommon
+    category: Redstone
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - craft
+      - mined
+
+  # ── extra mob drops (the common ones are explicit combat resources) ─────────
+  mob-drops:
+    materials:
+      - SPIDER_EYE
+      - PHANTOM_MEMBRANE
+      - RABBIT_FOOT
+      - RABBIT_HIDE
+      - INK_SAC
+      - GLOW_INK_SAC
+      - HONEYCOMB
+      - TURTLE_SCUTE
+      - NAUTILUS_SHELL
+      - SHULKER_SHELL
+    rarity: uncommon
+    category: Mob Drop
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mob
+
+  # ── plants ──────────────────────────────────────────────────────────────────
+  plants:
+    match:
+      - '*_SAPLING'
+    materials:
+      - OAK_LEAVES
+      - SUGAR_CANE
+      - BAMBOO
+      - CACTUS
+      - VINE
+      - LILY_PAD
+      - MOSS_BLOCK
+      - DANDELION
+      - POPPY
+      - BLUE_ORCHID
+      - ALLIUM
+      - AZURE_BLUET
+      - CORNFLOWER
+      - OXEYE_DAISY
+      - LILY_OF_THE_VALLEY
+    rarity: common
+    category: Plant
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - mined
+      - harvest
+
+  # ── brewing ─────────────────────────────────────────────────────────────────
+  brewing:
+    materials:
+      - GLASS_BOTTLE
+      - FERMENTED_SPIDER_EYE
+      - DRAGON_BREATH
+      - GLISTERING_MELON_SLICE
+      - GOLDEN_CARROT
+      - BLAZE_POWDER
+    rarity: uncommon
+    category: Brewing Ingredient
+    display-name: '%rarity_color%%name%'
+    lore:
+      - '&7%category%'
+      - ''
+      - '%rarity%'
+    format-on:
+      - craft
+      - mob
+
+  # ── Catch-all example (disabled). '*' dresses EVERY remaining item; explicit
+  # ── items and earlier rules still win, so it only fills the gaps. MiniMessage
+  # ── works here too. Uncomment to give literally everything an identity.
   # everything:
   #   match:
-  #     - "*"
+  #     - '*'
   #   rarity: common
-  #   display-name: "%name%"
+  #   display-name: '%name%'
   #   lore:
-  #     - "<gradient:#55ffff:#5555ff>%category%</gradient>"
-  #     - ""
-  #     - "%rarity%"
+  #     - '<gradient:#55ffff:#5555ff>%category%</gradient>'
+  #     - ''
+  #     - '%rarity%'
   #   format-on:
   #     - mined
   #     - craft
