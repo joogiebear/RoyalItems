@@ -6,11 +6,14 @@ formatted-items:
     material: COAL
     display-name: "&fCoal"
     lore:
-      - "&7Minion Fuel"
-      - "&7+10% Minion Speed"
-      - "&7Duration: &aForever"
+      - "&8Minion Fuel"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&7Increases the speed of your minion"
+      - "&7by &a10%&7 while in the fuel slot."
+      - "&7Never runs out."
+      - ""
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "coal"
       fuel_id: "coal"
