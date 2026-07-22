@@ -208,11 +208,15 @@ public final class FormattedItemService {
         return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags, rule.sources());
     }
 
-    /** Add a definition; false if its id was already taken (a material clash keeps the first, and logs). */
+    /** Add a definition; false if its id was taken or the material cannot hold a dressed template. */
     private boolean register(FormattedItemDefinition def) {
         if (byId.containsKey(def.id())) {
             logger.warning("Duplicate formatted-item id '" + def.id() + "' — keeping the first.");
             return false;
+        }
+        ItemStack template = build(def, 1);
+        if (!template.hasItemMeta()) {
+            return false;   // a technical material that can't hold a name/lore/identity — skip it
         }
         byId.put(def.id(), def);
         FormattedItemDefinition prev = byMaterial.putIfAbsent(def.material(), def);
@@ -220,7 +224,7 @@ public final class FormattedItemService {
             logger.warning("Both '" + prev.id() + "' and '" + def.id() + "' format " + def.material()
                     + "; drops of it will use '" + prev.id() + "'.");
         }
-        templates.put(def.id(), build(def, 1));
+        templates.put(def.id(), template);
         return true;
     }
 
@@ -307,6 +311,9 @@ public final class FormattedItemService {
     private ItemStack build(FormattedItemDefinition def, int amount) {
         ItemStack item = new ItemStack(def.material(), Math.max(1, amount));
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return item;   // this material cannot hold meta (some technical items) — nothing to dress
+        }
         if (def.displayName() != null) {
             meta.displayName(text(def.displayName()));
         }
