@@ -1,0 +1,123 @@
+# RoyalItems — fishing resources. Lore is visual; identity is the PDC (item_id/fuel_id).
+# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+
+formatted-items:
+  clay_ball:
+    material: CLAY_BALL
+    display-name: "&fClay Ball"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "clay_ball"
+
+  cod:
+    material: COD
+    display-name: "&fCod"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "cod"
+
+  salmon:
+    material: SALMON
+    display-name: "&fSalmon"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "salmon"
+
+  pufferfish:
+    material: PUFFERFISH
+    display-name: "&fPufferfish"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "pufferfish"
+
+  tropical_fish:
+    material: TROPICAL_FISH
+    display-name: "&fTropical Fish"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "tropical_fish"
+
+  prismarine_crystals:
+    material: PRISMARINE_CRYSTALS
+    display-name: "&fPrismarine Crystals"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "prismarine_crystals"
+
+  prismarine_shard:
+    material: PRISMARINE_SHARD
+    display-name: "&fPrismarine Shard"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "prismarine_shard"
+
+  sponge:
+    material: SPONGE
+    display-name: "&fSponge"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "sponge"
+
+  kelp:
+    material: KELP
+    display-name: "&fKelp"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "kelp"
+
+  lily_pad:
+    material: LILY_PAD
+    display-name: "&fLily Pad"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "lily_pad"
+
+  sea_pickle:
+    material: SEA_PICKLE
+    display-name: "&fSea Pickle"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "sea_pickle"
+
+  ink_sac:
+    material: INK_SAC
+    display-name: "&fInk Sac"
+    lore:
+      - "&7Fishing Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "ink_sac"

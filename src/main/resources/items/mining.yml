@@ -1,0 +1,216 @@
+# RoyalItems — mining resources. Lore is visual; identity is the PDC (item_id/fuel_id).
+# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+
+formatted-items:
+  coal:
+    material: COAL
+    display-name: "&fCoal"
+    lore:
+      - "&7Minion Fuel"
+      - "&7+10% Minion Speed"
+      - "&7Duration: &aForever"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "coal"
+      fuel_id: "coal"
+
+  cobblestone:
+    material: COBBLESTONE
+    display-name: "&fCobblestone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "cobblestone"
+
+  diamond:
+    material: DIAMOND
+    display-name: "&fDiamond"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "diamond"
+
+  emerald:
+    material: EMERALD
+    display-name: "&fEmerald"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "emerald"
+
+  end_stone:
+    material: END_STONE
+    display-name: "&fEnd Stone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "end_stone"
+
+  glowstone_dust:
+    material: GLOWSTONE_DUST
+    display-name: "&fGlowstone Dust"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "glowstone_dust"
+
+  gold_ingot:
+    material: GOLD_INGOT
+    display-name: "&fGold Ingot"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "gold_ingot"
+
+  gravel:
+    material: GRAVEL
+    display-name: "&fGravel"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "gravel"
+
+  ice:
+    material: ICE
+    display-name: "&fIce"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "ice"
+
+  iron_ingot:
+    material: IRON_INGOT
+    display-name: "&fIron Ingot"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "iron_ingot"
+
+  lapis_lazuli:
+    material: LAPIS_LAZULI
+    display-name: "&fLapis Lazuli"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "lapis_lazuli"
+
+  melon_slice:
+    material: MELON_SLICE
+    display-name: "&fMelon Slice"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "melon_slice"
+
+  mycelium:
+    material: MYCELIUM
+    display-name: "&fMycelium"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "mycelium"
+
+  quartz:
+    material: QUARTZ
+    display-name: "&fQuartz"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "quartz"
+
+  netherrack:
+    material: NETHERRACK
+    display-name: "&fNetherrack"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "netherrack"
+
+  obsidian:
+    material: OBSIDIAN
+    display-name: "&fObsidian"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "obsidian"
+
+  pumpkin:
+    material: PUMPKIN
+    display-name: "&fPumpkin"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "pumpkin"
+
+  red_sand:
+    material: RED_SAND
+    display-name: "&fRed Sand"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "red_sand"
+
+  redstone:
+    material: REDSTONE
+    display-name: "&fRedstone"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "redstone"
+
+  sand:
+    material: SAND
+    display-name: "&fSand"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "sand"
+
+  snow_block:
+    material: SNOW_BLOCK
+    display-name: "&fSnow Block"
+    lore:
+      - "&7Mining Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "snow_block"

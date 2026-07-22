@@ -6,12 +6,14 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -56,13 +58,26 @@ public final class FormattedItemService {
 
     // ------------------------------------------------------------------ config
 
-    public void load(ConfigurationSection root) {
+    /**
+     * (Re)load every definition: an optional {@code formatted-items} catch-all in config.yml, then every
+     * {@code items/**.yml} file (recursively, so you can group them into folders). Later files never
+     * override an id or material already claimed — the first definition wins, and a clash is logged.
+     */
+    public void reload() {
         byId.clear();
         byMaterial.clear();
         templates.clear();
-        ConfigurationSection items = root == null ? null : root.getConfigurationSection("formatted-items");
+        loadSection(plugin.getConfig().getConfigurationSection("formatted-items"));
+        int files = 0;
+        for (File file : yamlFiles(new File(plugin.getDataFolder(), "items"))) {
+            loadSection(YamlConfiguration.loadConfiguration(file).getConfigurationSection("formatted-items"));
+            files++;
+        }
+        logger.info("Loaded " + byId.size() + " formatted item(s) from " + files + " file(s).");
+    }
+
+    private void loadSection(ConfigurationSection items) {
         if (items == null) {
-            logger.warning("No 'formatted-items' section in config.yml — nothing to format.");
             return;
         }
         for (String id : items.getKeys(false)) {
@@ -74,6 +89,10 @@ public final class FormattedItemService {
             if (def == null) {
                 continue;
             }
+            if (byId.containsKey(def.id())) {
+                logger.warning("Duplicate formatted-item id '" + def.id() + "' — keeping the first.");
+                continue;
+            }
             byId.put(def.id(), def);
             FormattedItemDefinition prev = byMaterial.putIfAbsent(def.material(), def);
             if (prev != null) {
@@ -82,7 +101,27 @@ public final class FormattedItemService {
             }
             templates.put(def.id(), build(def, 1));
         }
-        logger.info("Loaded " + byId.size() + " formatted item(s).");
+    }
+
+    /** Every {@code .yml} under {@code dir} (recursively), skipping {@code _}-prefixed template files. */
+    private static List<File> yamlFiles(File dir) {
+        List<File> out = new ArrayList<>();
+        collect(dir, out);
+        return out;
+    }
+
+    private static void collect(File dir, List<File> out) {
+        File[] entries = dir.listFiles();
+        if (entries == null) {
+            return;
+        }
+        for (File f : entries) {
+            if (f.isDirectory()) {
+                collect(f, out);
+            } else if (f.getName().toLowerCase(Locale.ROOT).endsWith(".yml") && !f.getName().startsWith("_")) {
+                out.add(f);
+            }
+        }
     }
 
     private FormattedItemDefinition parse(String id, ConfigurationSection sec) {

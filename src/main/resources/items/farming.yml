@@ -1,0 +1,73 @@
+# RoyalItems — farming resources. Lore is visual; identity is the PDC (item_id/fuel_id).
+# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+
+formatted-items:
+  beetroot:
+    material: BEETROOT
+    display-name: "&fBeetroot"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "beetroot"
+
+  carrot:
+    material: CARROT
+    display-name: "&fCarrot"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "carrot"
+
+  red_mushroom:
+    material: RED_MUSHROOM
+    display-name: "&fRed Mushroom"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "red_mushroom"
+
+  brown_mushroom:
+    material: BROWN_MUSHROOM
+    display-name: "&fBrown Mushroom"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "brown_mushroom"
+
+  nether_wart:
+    material: NETHER_WART
+    display-name: "&fNether Wart"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "nether_wart"
+
+  potato:
+    material: POTATO
+    display-name: "&fPotato"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "potato"
+
+  wheat:
+    material: WHEAT
+    display-name: "&fWheat"
+    lore:
+      - "&7Farming Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "wheat"

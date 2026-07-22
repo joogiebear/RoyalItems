@@ -1,0 +1,171 @@
+# RoyalItems — combat resources. Lore is visual; identity is the PDC (item_id/fuel_id).
+# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+
+formatted-items:
+  blaze_rod:
+    material: BLAZE_ROD
+    display-name: "&fBlaze Rod"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "blaze_rod"
+    format-on:
+      - mob
+
+  chicken:
+    material: CHICKEN
+    display-name: "&fChicken"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "chicken"
+    format-on:
+      - mob
+
+  leather:
+    material: LEATHER
+    display-name: "&fLeather"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "leather"
+    format-on:
+      - mob
+
+  gunpowder:
+    material: GUNPOWDER
+    display-name: "&fGunpowder"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "gunpowder"
+    format-on:
+      - mob
+
+  ender_pearl:
+    material: ENDER_PEARL
+    display-name: "&fEnder Pearl"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "ender_pearl"
+    format-on:
+      - mob
+
+  ghast_tear:
+    material: GHAST_TEAR
+    display-name: "&fGhast Tear"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&9&lRARE"
+    tags:
+      item_id: "ghast_tear"
+    format-on:
+      - mob
+
+  magma_cream:
+    material: MAGMA_CREAM
+    display-name: "&fMagma Cream"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "magma_cream"
+    format-on:
+      - mob
+
+  porkchop:
+    material: PORKCHOP
+    display-name: "&fPorkchop"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "porkchop"
+    format-on:
+      - mob
+
+  rabbit_hide:
+    material: RABBIT_HIDE
+    display-name: "&fRabbit Hide"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "rabbit_hide"
+    format-on:
+      - mob
+
+  mutton:
+    material: MUTTON
+    display-name: "&fMutton"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "mutton"
+    format-on:
+      - mob
+
+  bone:
+    material: BONE
+    display-name: "&fBone"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "bone"
+    format-on:
+      - mob
+
+  slime_ball:
+    material: SLIME_BALL
+    display-name: "&fSlime Ball"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&a&lUNCOMMON"
+    tags:
+      item_id: "slime_ball"
+    format-on:
+      - mob
+
+  string:
+    material: STRING
+    display-name: "&fString"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "string"
+    format-on:
+      - mob
+
+  rotten_flesh:
+    material: ROTTEN_FLESH
+    display-name: "&fRotten Flesh"
+    lore:
+      - "&7Combat Resource"
+      - ""
+      - "&f&lCOMMON"
+    tags:
+      item_id: "rotten_flesh"
+    format-on:
+      - mob
