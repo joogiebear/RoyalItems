@@ -11,9 +11,8 @@ formatted-items:
       - "&8Minion Fuel"
       - "&8Collection Item"
       - ""
-      - "&7Increases the speed of your minion"
-      - "&7by &a10%&7 while in the fuel slot."
-      - "&7Never runs out."
+      - "&7Increases minion speed by &a5%"
+      - "&7for &e30 minutes&7."
       - ""
       - "&f&lCOMMON ORE"
     tags:
