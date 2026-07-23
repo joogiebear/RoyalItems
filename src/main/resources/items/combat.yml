@@ -1,14 +1,16 @@
 # RoyalItems — combat resources. Lore is visual; identity is the PDC (item_id/fuel_id).
-# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+# Hypixel-style layout: rarity-coloured name, a "Collection Item" usage tag, then a bold
+# "RARITY CATEGORY" footer. Retune display-name, lore, and rarity freely; /royalitems reload to apply.
 
 formatted-items:
+
   blaze_rod:
     material: BLAZE_ROD
-    display-name: "&fBlaze Rod"
+    display-name: "&9Blaze Rod"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE DROP"
     tags:
       item_id: "blaze_rod"
     format-on:
@@ -18,9 +20,9 @@ formatted-items:
     material: CHICKEN
     display-name: "&fChicken"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON FOOD"
     tags:
       item_id: "chicken"
     format-on:
@@ -28,11 +30,11 @@ formatted-items:
 
   leather:
     material: LEATHER
-    display-name: "&fLeather"
+    display-name: "&aLeather"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON DROP"
     tags:
       item_id: "leather"
     format-on:
@@ -42,9 +44,9 @@ formatted-items:
     material: GUNPOWDER
     display-name: "&fGunpowder"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON DROP"
     tags:
       item_id: "gunpowder"
     format-on:
@@ -52,11 +54,11 @@ formatted-items:
 
   ender_pearl:
     material: ENDER_PEARL
-    display-name: "&fEnder Pearl"
+    display-name: "&9Ender Pearl"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE DROP"
     tags:
       item_id: "ender_pearl"
     format-on:
@@ -64,11 +66,11 @@ formatted-items:
 
   ghast_tear:
     material: GHAST_TEAR
-    display-name: "&fGhast Tear"
+    display-name: "&9Ghast Tear"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE DROP"
     tags:
       item_id: "ghast_tear"
     format-on:
@@ -76,11 +78,11 @@ formatted-items:
 
   magma_cream:
     material: MAGMA_CREAM
-    display-name: "&fMagma Cream"
+    display-name: "&aMagma Cream"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON DROP"
     tags:
       item_id: "magma_cream"
     format-on:
@@ -90,9 +92,9 @@ formatted-items:
     material: PORKCHOP
     display-name: "&fPorkchop"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON FOOD"
     tags:
       item_id: "porkchop"
     format-on:
@@ -102,9 +104,9 @@ formatted-items:
     material: RABBIT_HIDE
     display-name: "&fRabbit Hide"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON DROP"
     tags:
       item_id: "rabbit_hide"
     format-on:
@@ -114,9 +116,9 @@ formatted-items:
     material: MUTTON
     display-name: "&fMutton"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON FOOD"
     tags:
       item_id: "mutton"
     format-on:
@@ -126,9 +128,9 @@ formatted-items:
     material: BONE
     display-name: "&fBone"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON DROP"
     tags:
       item_id: "bone"
     format-on:
@@ -136,11 +138,11 @@ formatted-items:
 
   slime_ball:
     material: SLIME_BALL
-    display-name: "&fSlime Ball"
+    display-name: "&aSlime Ball"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON DROP"
     tags:
       item_id: "slime_ball"
     format-on:
@@ -150,9 +152,9 @@ formatted-items:
     material: STRING
     display-name: "&fString"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON DROP"
     tags:
       item_id: "string"
     format-on:
@@ -162,9 +164,9 @@ formatted-items:
     material: ROTTEN_FLESH
     display-name: "&fRotten Flesh"
     lore:
-      - "&7Combat Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON DROP"
     tags:
       item_id: "rotten_flesh"
     format-on:
