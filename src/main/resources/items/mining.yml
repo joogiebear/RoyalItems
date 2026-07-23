@@ -3,16 +3,16 @@
 # "RARITY CATEGORY" footer. Retune display-name, lore, and rarity freely; /royalitems reload to apply.
 
 formatted-items:
-  # Coal is special — it is a minion fuel, so it keeps a usage tag and an effect line.
+
   coal:
     material: COAL
     display-name: "&fCoal"
     lore:
-      - "&8Minion Fuel"
       - "&8Collection Item"
       - ""
-      - "&7Increases minion speed by &a5%"
-      - "&7for &e30 minutes&7."
+      - "&7Increases the speed of"
+      - "&7your minion by &a5%&7 for 30"
+      - "&7minutes!"
       - ""
       - "&f&lCOMMON ORE"
     tags:
@@ -31,51 +31,51 @@ formatted-items:
 
   diamond:
     material: DIAMOND
-    display-name: "&9Diamond"
+    display-name: "&fDiamond"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE GEM"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "diamond"
 
   emerald:
     material: EMERALD
-    display-name: "&9Emerald"
+    display-name: "&fEmerald"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE GEM"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "emerald"
 
   end_stone:
     material: END_STONE
-    display-name: "&aEnd Stone"
+    display-name: "&fEnd Stone"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON BLOCK"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "end_stone"
 
   glowstone_dust:
     material: GLOWSTONE_DUST
-    display-name: "&aGlowstone Dust"
+    display-name: "&fGlowstone Dust"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON DUST"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "glowstone_dust"
 
   gold_ingot:
     material: GOLD_INGOT
-    display-name: "&aGold Ingot"
+    display-name: "&fGold Ingot"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON METAL"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "gold_ingot"
 
@@ -91,31 +91,31 @@ formatted-items:
 
   ice:
     material: ICE
-    display-name: "&aIce"
+    display-name: "&fIce"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON BLOCK"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "ice"
 
   iron_ingot:
     material: IRON_INGOT
-    display-name: "&aIron Ingot"
+    display-name: "&fIron Ingot"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON METAL"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "iron_ingot"
 
   lapis_lazuli:
     material: LAPIS_LAZULI
-    display-name: "&aLapis Lazuli"
+    display-name: "&fLapis Lazuli"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON GEM"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "lapis_lazuli"
 
@@ -125,27 +125,27 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "melon_slice"
 
   mycelium:
     material: MYCELIUM
-    display-name: "&aMycelium"
+    display-name: "&fMycelium"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON BLOCK"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "mycelium"
 
   quartz:
     material: QUARTZ
-    display-name: "&aQuartz"
+    display-name: "&fQuartz"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON GEM"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "quartz"
 
@@ -161,11 +161,11 @@ formatted-items:
 
   obsidian:
     material: OBSIDIAN
-    display-name: "&9Obsidian"
+    display-name: "&fObsidian"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE BLOCK"
+      - "&f&lCOMMON BLOCK"
     tags:
       item_id: "obsidian"
 
@@ -175,7 +175,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "pumpkin"
 
@@ -191,11 +191,11 @@ formatted-items:
 
   redstone:
     material: REDSTONE
-    display-name: "&aRedstone"
+    display-name: "&fRedstone"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON DUST"
+      - "&f&lCOMMON ORE"
     tags:
       item_id: "redstone"
 
@@ -215,6 +215,6 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON BLOCK"
+      - "&f&lCOMMON"
     tags:
       item_id: "snow_block"

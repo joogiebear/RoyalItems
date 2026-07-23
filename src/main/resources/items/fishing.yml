@@ -6,81 +6,81 @@ formatted-items:
 
   clay_ball:
     material: CLAY_BALL
-    display-name: "&aClay Ball"
+    display-name: "&fClay Ball"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON CATCH"
+      - "&f&lCOMMON"
     tags:
       item_id: "clay_ball"
 
   cod:
     material: COD
-    display-name: "&aCod"
+    display-name: "&fCod"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON FISH"
+      - "&f&lCOMMON"
     tags:
       item_id: "cod"
 
   salmon:
     material: SALMON
-    display-name: "&aSalmon"
+    display-name: "&fSalmon"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON FISH"
+      - "&f&lCOMMON"
     tags:
       item_id: "salmon"
 
   pufferfish:
     material: PUFFERFISH
-    display-name: "&9Pufferfish"
+    display-name: "&fPufferfish"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE FISH"
+      - "&f&lCOMMON"
     tags:
       item_id: "pufferfish"
 
   tropical_fish:
     material: TROPICAL_FISH
-    display-name: "&9Tropical Fish"
+    display-name: "&fTropical Fish"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE FISH"
+      - "&f&lCOMMON"
     tags:
       item_id: "tropical_fish"
 
   prismarine_crystals:
     material: PRISMARINE_CRYSTALS
-    display-name: "&9Prismarine Crystals"
+    display-name: "&fPrismarine Crystals"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE CATCH"
+      - "&f&lCOMMON"
     tags:
       item_id: "prismarine_crystals"
 
   prismarine_shard:
     material: PRISMARINE_SHARD
-    display-name: "&9Prismarine Shard"
+    display-name: "&fPrismarine Shard"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE CATCH"
+      - "&f&lCOMMON"
     tags:
       item_id: "prismarine_shard"
 
   sponge:
     material: SPONGE
-    display-name: "&9Sponge"
+    display-name: "&fSponge"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE CATCH"
+      - "&f&lCOMMON"
     tags:
       item_id: "sponge"
 
@@ -100,7 +100,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON PLANT"
+      - "&f&lCOMMON"
     tags:
       item_id: "lily_pad"
 
@@ -120,6 +120,6 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CATCH"
+      - "&f&lCOMMON"
     tags:
       item_id: "ink_sac"

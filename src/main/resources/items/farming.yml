@@ -20,37 +20,37 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "carrot"
 
   red_mushroom:
     material: RED_MUSHROOM
-    display-name: "&aRed Mushroom"
+    display-name: "&fRed Mushroom"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON MUSHROOM"
+      - "&f&lCOMMON"
     tags:
       item_id: "red_mushroom"
 
   brown_mushroom:
     material: BROWN_MUSHROOM
-    display-name: "&aBrown Mushroom"
+    display-name: "&fBrown Mushroom"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON MUSHROOM"
+      - "&f&lCOMMON"
     tags:
       item_id: "brown_mushroom"
 
   nether_wart:
     material: NETHER_WART
-    display-name: "&aNether Wart"
+    display-name: "&fNether Wart"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "nether_wart"
 
@@ -60,7 +60,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "potato"
 
@@ -70,6 +70,6 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON CROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "wheat"

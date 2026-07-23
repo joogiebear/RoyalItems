@@ -10,7 +10,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "acacia_log"
 
@@ -20,7 +20,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "birch_log"
 
@@ -40,7 +40,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "dark_oak_log"
 
@@ -50,7 +50,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "jungle_log"
 
@@ -60,7 +60,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "mangrove_log"
 
@@ -70,7 +70,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "oak_log"
 
@@ -80,6 +80,6 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON LOG"
+      - "&f&lCOMMON"
     tags:
       item_id: "spruce_log"

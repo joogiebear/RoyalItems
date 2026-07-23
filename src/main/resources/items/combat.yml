@@ -6,11 +6,11 @@ formatted-items:
 
   blaze_rod:
     material: BLAZE_ROD
-    display-name: "&9Blaze Rod"
+    display-name: "&fBlaze Rod"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "blaze_rod"
     format-on:
@@ -22,7 +22,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON FOOD"
+      - "&f&lCOMMON"
     tags:
       item_id: "chicken"
     format-on:
@@ -30,11 +30,11 @@ formatted-items:
 
   leather:
     material: LEATHER
-    display-name: "&aLeather"
+    display-name: "&fLeather"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "leather"
     format-on:
@@ -46,7 +46,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "gunpowder"
     format-on:
@@ -54,11 +54,11 @@ formatted-items:
 
   ender_pearl:
     material: ENDER_PEARL
-    display-name: "&9Ender Pearl"
+    display-name: "&fEnder Pearl"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "ender_pearl"
     format-on:
@@ -66,11 +66,11 @@ formatted-items:
 
   ghast_tear:
     material: GHAST_TEAR
-    display-name: "&9Ghast Tear"
+    display-name: "&fGhast Tear"
     lore:
       - "&8Collection Item"
       - ""
-      - "&9&lRARE DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "ghast_tear"
     format-on:
@@ -78,11 +78,11 @@ formatted-items:
 
   magma_cream:
     material: MAGMA_CREAM
-    display-name: "&aMagma Cream"
+    display-name: "&fMagma Cream"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "magma_cream"
     format-on:
@@ -94,7 +94,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON FOOD"
+      - "&f&lCOMMON"
     tags:
       item_id: "porkchop"
     format-on:
@@ -106,7 +106,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "rabbit_hide"
     format-on:
@@ -118,7 +118,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON FOOD"
+      - "&f&lCOMMON"
     tags:
       item_id: "mutton"
     format-on:
@@ -130,7 +130,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "bone"
     format-on:
@@ -138,11 +138,11 @@ formatted-items:
 
   slime_ball:
     material: SLIME_BALL
-    display-name: "&aSlime Ball"
+    display-name: "&fSlime Ball"
     lore:
       - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "slime_ball"
     format-on:
@@ -154,7 +154,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "string"
     format-on:
@@ -166,7 +166,7 @@ formatted-items:
     lore:
       - "&8Collection Item"
       - ""
-      - "&f&lCOMMON DROP"
+      - "&f&lCOMMON"
     tags:
       item_id: "rotten_flesh"
     format-on:
