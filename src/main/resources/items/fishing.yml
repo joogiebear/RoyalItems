@@ -1,94 +1,96 @@
 # RoyalItems — fishing resources. Lore is visual; identity is the PDC (item_id/fuel_id).
-# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+# Hypixel-style layout: rarity-coloured name, a "Collection Item" usage tag, then a bold
+# "RARITY CATEGORY" footer. Retune display-name, lore, and rarity freely; /royalitems reload to apply.
 
 formatted-items:
+
   clay_ball:
     material: CLAY_BALL
-    display-name: "&fClay Ball"
+    display-name: "&aClay Ball"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON CATCH"
     tags:
       item_id: "clay_ball"
 
   cod:
     material: COD
-    display-name: "&fCod"
+    display-name: "&aCod"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON FISH"
     tags:
       item_id: "cod"
 
   salmon:
     material: SALMON
-    display-name: "&fSalmon"
+    display-name: "&aSalmon"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON FISH"
     tags:
       item_id: "salmon"
 
   pufferfish:
     material: PUFFERFISH
-    display-name: "&fPufferfish"
+    display-name: "&9Pufferfish"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE FISH"
     tags:
       item_id: "pufferfish"
 
   tropical_fish:
     material: TROPICAL_FISH
-    display-name: "&fTropical Fish"
+    display-name: "&9Tropical Fish"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE FISH"
     tags:
       item_id: "tropical_fish"
 
   prismarine_crystals:
     material: PRISMARINE_CRYSTALS
-    display-name: "&fPrismarine Crystals"
+    display-name: "&9Prismarine Crystals"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE CATCH"
     tags:
       item_id: "prismarine_crystals"
 
   prismarine_shard:
     material: PRISMARINE_SHARD
-    display-name: "&fPrismarine Shard"
+    display-name: "&9Prismarine Shard"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE CATCH"
     tags:
       item_id: "prismarine_shard"
 
   sponge:
     material: SPONGE
-    display-name: "&fSponge"
+    display-name: "&9Sponge"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&9&lRARE"
+      - "&9&lRARE CATCH"
     tags:
       item_id: "sponge"
 
   kelp:
     material: KELP
-    display-name: "&fKelp"
+    display-name: "&aKelp"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON PLANT"
     tags:
       item_id: "kelp"
 
@@ -96,19 +98,19 @@ formatted-items:
     material: LILY_PAD
     display-name: "&fLily Pad"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON PLANT"
     tags:
       item_id: "lily_pad"
 
   sea_pickle:
     material: SEA_PICKLE
-    display-name: "&fSea Pickle"
+    display-name: "&aSea Pickle"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&a&lUNCOMMON"
+      - "&a&lUNCOMMON CATCH"
     tags:
       item_id: "sea_pickle"
 
@@ -116,8 +118,8 @@ formatted-items:
     material: INK_SAC
     display-name: "&fInk Sac"
     lore:
-      - "&7Fishing Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON CATCH"
     tags:
       item_id: "ink_sac"

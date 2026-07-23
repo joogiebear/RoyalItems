@@ -1,15 +1,16 @@
 # RoyalItems — prestige items with bespoke lore and higher rarities. Explicit items
 # always win over rules, so these override anything a rule would have produced.
+# Hypixel footer: keeps each item's flavour line, adds a bold "RARITY CATEGORY" footer.
 
 formatted-items:
 
   golden_apple:
     material: GOLDEN_APPLE
-    display-name: '&6Golden Apple'
+    display-name: "&6Golden Apple"
     lore:
-      - '&7Restores health and grants absorption.'
-      - ''
-      - '&9&lRARE'
+      - "&7Restores health and grants absorption."
+      - ""
+      - "&9&lRARE FOOD"
     tags:
       item_id: golden_apple
     format-on:
@@ -17,21 +18,21 @@ formatted-items:
 
   enchanted_golden_apple:
     material: ENCHANTED_GOLDEN_APPLE
-    display-name: '<gradient:#ffd700:#ff8c00>Enchanted Golden Apple</gradient>'
+    display-name: "<gradient:#ffd700:#ff8c00>Enchanted Golden Apple</gradient>"
     lore:
-      - '&7A fabled fruit of immense power.'
-      - ''
-      - '&d&lMYTHIC'
+      - "&7A fabled fruit of immense power."
+      - ""
+      - "&d&lMYTHIC FOOD"
     tags:
       item_id: enchanted_golden_apple
 
   nether_star:
     material: NETHER_STAR
-    display-name: '<gradient:#ffffff:#aa00aa>Nether Star</gradient>'
+    display-name: "<gradient:#ffffff:#aa00aa>Nether Star</gradient>"
     lore:
-      - '&7Torn from the heart of the Wither.'
-      - ''
-      - '&6&lLEGENDARY'
+      - "&7Torn from the heart of the Wither."
+      - ""
+      - "&6&lLEGENDARY MATERIAL"
     tags:
       item_id: nether_star
     format-on:
@@ -39,21 +40,21 @@ formatted-items:
 
   elytra:
     material: ELYTRA
-    display-name: '&dElytra'
+    display-name: "&dElytra"
     lore:
-      - '&7Membrane wings from the End cities.'
-      - ''
-      - '&6&lLEGENDARY'
+      - "&7Membrane wings from the End cities."
+      - ""
+      - "&6&lLEGENDARY ARMOR"
     tags:
       item_id: elytra
 
   totem_of_undying:
     material: TOTEM_OF_UNDYING
-    display-name: '&eTotem of Undying'
+    display-name: "&eTotem of Undying"
     lore:
-      - '&7Cheats death — once.'
-      - ''
-      - '&5&lEPIC'
+      - "&7Cheats death — once."
+      - ""
+      - "&5&lEPIC ARTIFACT"
     tags:
       item_id: totem_of_undying
     format-on:
@@ -61,21 +62,21 @@ formatted-items:
 
   heart_of_the_sea:
     material: HEART_OF_THE_SEA
-    display-name: '&bHeart of the Sea'
+    display-name: "&bHeart of the Sea"
     lore:
-      - '&7The core of a conduit.'
-      - ''
-      - '&9&lRARE'
+      - "&7The core of a conduit."
+      - ""
+      - "&9&lRARE MATERIAL"
     tags:
       item_id: heart_of_the_sea
 
   beacon:
     material: BEACON
-    display-name: '&bBeacon'
+    display-name: "&bBeacon"
     lore:
-      - '&7Projects a guiding beam of power.'
-      - ''
-      - '&9&lRARE'
+      - "&7Projects a guiding beam of power."
+      - ""
+      - "&9&lRARE BLOCK"
     tags:
       item_id: beacon
     format-on:
@@ -83,11 +84,11 @@ formatted-items:
 
   conduit:
     material: CONDUIT
-    display-name: '&3Conduit'
+    display-name: "&3Conduit"
     lore:
-      - '&7Grants dominion over the deep.'
-      - ''
-      - '&9&lRARE'
+      - "&7Grants dominion over the deep."
+      - ""
+      - "&9&lRARE BLOCK"
     tags:
       item_id: conduit
     format-on:
@@ -95,11 +96,11 @@ formatted-items:
 
   netherite_ingot:
     material: NETHERITE_INGOT
-    display-name: '&8&lNetherite Ingot'
+    display-name: "&8&lNetherite Ingot"
     lore:
-      - '&7Forged from ancient debris.'
-      - ''
-      - '&5&lEPIC'
+      - "&7Forged from ancient debris."
+      - ""
+      - "&5&lEPIC METAL"
     tags:
       item_id: netherite_ingot
     format-on:
@@ -107,11 +108,11 @@ formatted-items:
 
   ancient_debris:
     material: ANCIENT_DEBRIS
-    display-name: '&8Ancient Debris'
+    display-name: "&8Ancient Debris"
     lore:
-      - '&7The rarest ore in the Nether.'
-      - ''
-      - '&5&lEPIC'
+      - "&7The rarest ore in the Nether."
+      - ""
+      - "&5&lEPIC ORE"
     tags:
       item_id: ancient_debris
     format-on:
@@ -119,31 +120,31 @@ formatted-items:
 
   dragon_egg:
     material: DRAGON_EGG
-    display-name: '<gradient:#8800cc:#1a0033>Dragon Egg</gradient>'
+    display-name: "<gradient:#8800cc:#1a0033>Dragon Egg</gradient>"
     lore:
-      - '&7The ultimate trophy of the End.'
-      - ''
-      - '&d&lMYTHIC'
+      - "&7The ultimate trophy of the End."
+      - ""
+      - "&d&lMYTHIC TROPHY"
     tags:
       item_id: dragon_egg
 
   dragon_head:
     material: DRAGON_HEAD
-    display-name: '&5Dragon Head'
+    display-name: "&5Dragon Head"
     lore:
-      - '&7A trophy of the Ender Dragon.'
-      - ''
-      - '&5&lEPIC'
+      - "&7A trophy of the Ender Dragon."
+      - ""
+      - "&5&lEPIC TROPHY"
     tags:
       item_id: dragon_head
 
   wither_skeleton_skull:
     material: WITHER_SKELETON_SKULL
-    display-name: '&8Wither Skeleton Skull'
+    display-name: "&8Wither Skeleton Skull"
     lore:
-      - '&7Three of these summon the Wither.'
-      - ''
-      - '&5&lEPIC'
+      - "&7Three of these summon the Wither."
+      - ""
+      - "&5&lEPIC TROPHY"
     tags:
       item_id: wither_skeleton_skull
     format-on:
@@ -153,8 +154,8 @@ formatted-items:
     material: EXPERIENCE_BOTTLE
     display-name: "&aBottle o' Enchanting"
     lore:
-      - '&7Shatters into experience.'
-      - ''
-      - '&a&lUNCOMMON'
+      - "&7Shatters into experience."
+      - ""
+      - "&a&lUNCOMMON CONSUMABLE"
     tags:
       item_id: experience_bottle

@@ -1,14 +1,16 @@
 # RoyalItems — foraging resources. Lore is visual; identity is the PDC (item_id/fuel_id).
-# Retune display-name, lore, and rarity freely; /royalitems reload to apply.
+# Hypixel-style layout: rarity-coloured name, a "Collection Item" usage tag, then a bold
+# "RARITY CATEGORY" footer. Retune display-name, lore, and rarity freely; /royalitems reload to apply.
 
 formatted-items:
+
   acacia_log:
     material: ACACIA_LOG
     display-name: "&fAcacia Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "acacia_log"
 
@@ -16,9 +18,9 @@ formatted-items:
     material: BIRCH_LOG
     display-name: "&fBirch Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "birch_log"
 
@@ -26,9 +28,9 @@ formatted-items:
     material: CHERRY_LOG
     display-name: "&fCherry Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "cherry_log"
 
@@ -36,9 +38,9 @@ formatted-items:
     material: DARK_OAK_LOG
     display-name: "&fDark Oak Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "dark_oak_log"
 
@@ -46,9 +48,9 @@ formatted-items:
     material: JUNGLE_LOG
     display-name: "&fJungle Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "jungle_log"
 
@@ -56,9 +58,9 @@ formatted-items:
     material: MANGROVE_LOG
     display-name: "&fMangrove Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "mangrove_log"
 
@@ -66,9 +68,9 @@ formatted-items:
     material: OAK_LOG
     display-name: "&fOak Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "oak_log"
 
@@ -76,8 +78,8 @@ formatted-items:
     material: SPRUCE_LOG
     display-name: "&fSpruce Log"
     lore:
-      - "&7Foraging Resource"
+      - "&8Collection Item"
       - ""
-      - "&f&lCOMMON"
+      - "&f&lCOMMON LOG"
     tags:
       item_id: "spruce_log"
