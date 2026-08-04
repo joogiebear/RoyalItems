@@ -1,5 +1,7 @@
 package com.mystipixel.royalitems;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -135,7 +137,7 @@ public final class FormattedItemService {
             }
             String key = id.toLowerCase(Locale.ROOT);
             rarities.putIfAbsent(key, new Rarity(key, r.getString("display", "&f&l" + id.toUpperCase(Locale.ROOT)),
-                    r.getString("color", "&f")));
+                    r.getString("color", "&f"), r.getString("tooltip-style", null)));
         }
     }
 
@@ -207,7 +209,8 @@ public final class FormattedItemService {
         for (Map.Entry<String, String> e : rule.extraTags().entrySet()) {
             tags.put(e.getKey(), apply(e.getValue(), ph));
         }
-        return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags, rule.sources());
+        return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags,
+                rule.sources(), rarity.tooltipStyle());
     }
 
     /** Add a definition; false if its id was taken or the material cannot hold a dressed template. */
@@ -293,6 +296,15 @@ public final class FormattedItemService {
             }
         }
 
+        // Explicit items may name a tooltip-style directly, or inherit one from a rarity they reference.
+        String tooltipStyle = sec.getString("tooltip-style", null);
+        if (tooltipStyle == null) {
+            Rarity rarity = rarities.get(sec.getString("rarity", "").toLowerCase(Locale.ROOT));
+            if (rarity != null) {
+                tooltipStyle = rarity.tooltipStyle();
+            }
+        }
+
         Set<FormattedItemDefinition.Source> sources = new LinkedHashSet<>();
         List<String> raw = sec.getStringList("format-on");
         if (raw.isEmpty()) {
@@ -305,7 +317,7 @@ public final class FormattedItemService {
                 }
             }
         }
-        return new FormattedItemDefinition(id, material, name, lore, tags, sources);
+        return new FormattedItemDefinition(id, material, name, lore, tags, sources, tooltipStyle);
     }
 
     // ------------------------------------------------------------------ building
@@ -331,6 +343,18 @@ public final class FormattedItemService {
             pdc.set(key(tag.getKey()), PersistentDataType.STRING, tag.getValue());
         }
         item.setItemMeta(meta);
+
+        // Opt-in coloured tooltip border, drawn client-side from the resource pack sprite this style
+        // names. Set only when a style is configured — an item pointing at a sprite the pack lacks
+        // renders the missing-texture checkerboard, so default (null) leaves the vanilla tooltip alone.
+        if (def.tooltipStyle() != null && !def.tooltipStyle().isBlank()) {
+            try {
+                item.setData(DataComponentTypes.TOOLTIP_STYLE, Key.key(def.tooltipStyle()));
+            } catch (RuntimeException ex) {
+                logger.warning("Item '" + def.id() + "' has an invalid tooltip-style '"
+                        + def.tooltipStyle() + "' — must be a resource location like royalitems:rare. Skipped.");
+            }
+        }
         return item;
     }
 

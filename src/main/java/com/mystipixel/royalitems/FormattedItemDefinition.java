@@ -37,15 +37,17 @@ public final class FormattedItemDefinition {
     private final List<String> lore;       // legacy '&' strings
     private final Map<String, String> tags; // PDC key -> value; always contains "item_id"
     private final Set<Source> sources;
+    private final String tooltipStyle;     // resource location for a custom tooltip border, or null
 
-    public FormattedItemDefinition(String id, Material material, String displayName,
-                                   List<String> lore, Map<String, String> tags, Set<Source> sources) {
+    public FormattedItemDefinition(String id, Material material, String displayName, List<String> lore,
+                                   Map<String, String> tags, Set<Source> sources, String tooltipStyle) {
         this.id = id;
         this.material = material;
         this.displayName = displayName;
         this.lore = lore;
         this.tags = tags;
         this.sources = sources;
+        this.tooltipStyle = tooltipStyle;
     }
 
     public String id() {
@@ -70,6 +72,11 @@ public final class FormattedItemDefinition {
 
     public String tag(String key) {
         return tags.get(key);
+    }
+
+    /** The custom tooltip-border style (a resource location like {@code royalitems:rare}), or null. */
+    public String tooltipStyle() {
+        return tooltipStyle;
     }
 
     public boolean formatsFrom(Source source) {

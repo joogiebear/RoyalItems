@@ -5,22 +5,39 @@
 #    color   : the colour a rule may tint a name with (%rarity_color%)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Coloured tooltip borders (optional)
+# ------------------------------------
+# Add `tooltip-style: royalitems:<id>` to a rarity to draw a coloured border around the whole
+# tooltip box for items of that rarity. This is drawn CLIENT-SIDE from a resource pack, so:
+#   1. The player must be running a resource pack that ships the matching sprites
+#      (assets/royalitems/textures/gui/sprites/tooltip/<id>_background.png and _frame.png).
+#      The RoyalItems tooltip pack provides all six — merge it into your server's pack.
+#   2. If you point at a style the pack does NOT have, that tooltip shows the missing-texture
+#      checkerboard. So only enable a rarity here once its sprite is actually in your live pack.
+# Leave `tooltip-style` off (as below) and tooltips render exactly as they do now.
+
 rarities:
   common:
     display: "&f&lCOMMON"
     color: "&f"
+    # tooltip-style: royalitems:common     # usually left plain
   uncommon:
     display: "&a&lUNCOMMON"
     color: "&a"
+    # tooltip-style: royalitems:uncommon
   rare:
     display: "&9&lRARE"
     color: "&9"
+    # tooltip-style: royalitems:rare
   epic:
     display: "&5&lEPIC"
     color: "&5"
+    # tooltip-style: royalitems:epic
   legendary:
     display: "&6&lLEGENDARY"
     color: "&6"
+    # tooltip-style: royalitems:legendary
   mythic:
     display: "&d&lMYTHIC"
     color: "&d"
+    # tooltip-style: royalitems:mythic
