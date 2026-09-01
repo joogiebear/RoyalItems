@@ -38,6 +38,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             case "info" -> info(sender);
             case "formatinv" -> formatInv(sender, args);
             case "export" -> export(sender);
+            case "inspect" -> inspect(sender);
             default -> usage(sender, label);
         }
         return true;
@@ -116,6 +117,126 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * {@code /royalitems inspect} — everything RoyalItems knows about the held item: its identity,
+     * its dress state (including staleness), and the border detector's verdict with its reasoning.
+     * The border is a documented heuristic, so "why does this item have no border" deserves an
+     * answer that isn't reading the code — the {@code /ah category} principle applied here.
+     */
+    private void inspect(CommandSender sender) {
+        if (!sender.hasPermission("royalitems.admin")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            return;
+        }
+        if (!(sender instanceof org.bukkit.entity.Player player)) {
+            sender.sendMessage(ChatColor.RED + "Only players can inspect a held item.");
+            return;
+        }
+        org.bukkit.inventory.ItemStack held = player.getInventory().getItemInMainHand();
+        if (held.getType().isAir()) {
+            sender.sendMessage(ChatColor.RED + "Hold the item you want to inspect.");
+            return;
+        }
+
+        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Item Inspection");
+        sender.sendMessage(ChatColor.GRAY + "Material: " + ChatColor.WHITE + held.getType());
+
+        String id = service.getItemId(held);
+        if (id != null) {
+            String fuel = service.getFuelId(held);
+            sender.sendMessage(ChatColor.GRAY + "item_id:  " + ChatColor.WHITE + id
+                    + (fuel == null ? "" : ChatColor.GRAY + "   fuel_id: " + ChatColor.WHITE + fuel));
+            FormattedItemDefinition def = service.byId(id);
+            String state;
+            if (def == null) {
+                state = ChatColor.YELLOW + "dressed, but its definition no longer exists — left as-is";
+            } else if (def.material() != held.getType()) {
+                state = ChatColor.YELLOW + "dressed, but the definition now uses " + def.material()
+                        + " — left as-is";
+            } else if (def.hash().equals(service.getTag(held, FormattedItemService.DEF_HASH))) {
+                state = ChatColor.GREEN + "dressed, up to date";
+            } else {
+                state = ChatColor.YELLOW + "dressed with an older definition — refreshes on the next"
+                        + " pickup, container close or craft";
+            }
+            sender.sendMessage(ChatColor.GRAY + "State:    " + state);
+        } else {
+            String reason = service.skipReason(held);
+            sender.sendMessage(ChatColor.GRAY + "State:    " + (reason == null
+                    ? ChatColor.GREEN + "plain and supported — dresses on the next pickup, container"
+                    + " close or craft"
+                    : ChatColor.YELLOW + "not dressed: " + reason));
+        }
+        inspectBorder(sender, held);
+    }
+
+    /** The border half of {@link #inspect}: which rarity the packet layer would see, and why. */
+    private void inspectBorder(CommandSender sender, org.bukkit.inventory.ItemStack held) {
+        net.kyori.adventure.key.Key explicit =
+                held.getData(io.papermc.paper.datacomponent.DataComponentTypes.TOOLTIP_STYLE);
+        if (explicit != null) {
+            sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE + explicit
+                    + ChatColor.GRAY + " (explicit tooltip_style — the packet layer leaves it alone)");
+            return;
+        }
+        var cfg = plugin.getConfig();
+        if (!cfg.getBoolean("tooltip-borders.enabled", true)) {
+            sender.sendMessage(ChatColor.GRAY + "Border:   "
+                    + ChatColor.YELLOW + "none — tooltip-borders is disabled in config");
+            return;
+        }
+        var section = cfg.getConfigurationSection("tooltip-borders.styles");
+        java.util.Set<String> tokens = new java.util.HashSet<>();
+        if (section != null) {
+            for (String key : section.getKeys(false)) {
+                tokens.add(key.trim().toUpperCase(java.util.Locale.ROOT));
+            }
+        }
+        java.util.List<String> configured = cfg.getStringList("tooltip-borders.context-keywords");
+        java.util.Set<String> context = new java.util.HashSet<>();
+        for (String key : configured.isEmpty() ? java.util.List.of("TIER", "RARITY", "ROYAL") : configured) {
+            context.add(key.trim().toUpperCase(java.util.Locale.ROOT));
+        }
+
+        java.util.List<net.kyori.adventure.text.Component> lore =
+                held.hasItemMeta() ? held.getItemMeta().lore() : null;
+        if (lore == null || lore.isEmpty()) {
+            sender.sendMessage(ChatColor.GRAY + "Border:   "
+                    + ChatColor.YELLOW + "none — the item has no lore to read a rarity from");
+            return;
+        }
+        var plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText();
+        java.util.List<String> lines = new java.util.ArrayList<>(lore.size());
+        for (var line : lore) {
+            lines.add(RarityDetect.sanitize(plain.serialize(line)));
+        }
+        RarityDetect.Match match = RarityDetect.detect(lines, context, tokens);
+        if (match == null) {
+            sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.YELLOW
+                    + "none — no rarity token stands alone on a lore line or shares one with a"
+                    + " context keyword");
+            return;
+        }
+        String style = null;
+        if (section != null) {
+            for (String key : section.getKeys(false)) {
+                if (key.equalsIgnoreCase(match.rarity())) {
+                    style = section.getString(key);
+                    break;
+                }
+            }
+        }
+        sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE
+                + match.rarity().toLowerCase(java.util.Locale.ROOT)
+                + ChatColor.GRAY + " → " + ChatColor.WHITE + (style == null ? "?" : style)
+                + ChatColor.GRAY + " (matched '" + match.line() + "', "
+                + (match.standalone() ? "standalone line" : "context keyword") + ")");
+        if (plugin.getServer().getPluginManager().getPlugin("packetevents") == null) {
+            sender.sendMessage(ChatColor.GRAY + "          " + ChatColor.YELLOW
+                    + "PacketEvents is not installed — only RoyalItems-dressed items get borders.");
+        }
+    }
+
     private void reload(CommandSender sender) {
         if (!sender.hasPermission("royalitems.reload")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
@@ -166,7 +287,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     }
 
     private void usage(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv|export>");
+        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv|export|inspect>");
     }
 
     @Override
@@ -183,6 +304,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("royalitems.admin")) {
                 subs.add("info");
                 subs.add("export");
+                subs.add("inspect");
             }
             if (sender.hasPermission("royalitems.formatinv")) {
                 subs.add("formatinv");

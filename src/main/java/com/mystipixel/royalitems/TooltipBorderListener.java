@@ -43,10 +43,6 @@ import java.util.Set;
  */
 public final class TooltipBorderListener extends PacketListenerAbstract {
 
-    /** Fixed low-to-high tier order, used to pick the strongest rarity when a lore mentions several. */
-    private static final List<String> RANK =
-            List.of("COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC");
-
     private final Map<String, ResourceLocation> styleByRarity; // UPPER-CASE rarity word -> border location
     private final Set<String> contextKeywords;                 // UPPER-CASE words that qualify an in-line rarity
     private final PlainTextComponentSerializer plain = PlainTextComponentSerializer.plainText();
@@ -134,54 +130,26 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         return true;
     }
 
-    /** The border for an item's rarity, read from its lore, or null if it carries no known rarity. */
+    /**
+     * The border for an item's rarity, read from its lore via the shared {@link RarityDetect}
+     * heuristic, or null if it declares no known rarity.
+     */
     private ResourceLocation styleFor(ItemStack item) {
         Optional<ItemLore> lore = item.getComponent(ComponentTypes.LORE);
         if (lore.isEmpty()) {
             return null;
         }
-        boolean dump = debug && debugDumps < 40;
-        StringBuilder dumped = dump ? new StringBuilder() : null;
-
-        String bestRarity = null;
-        ResourceLocation bestStyle = null;
+        List<String> lines = new java.util.ArrayList<>(lore.get().getLines().size());
         for (Component line : lore.get().getLines()) {
-            String text = sanitize(plain.serialize(line));
-            if (dump) {
-                dumped.append(" | '").append(text).append('\'');
-            }
-            if (text.isEmpty()) {
-                continue;
-            }
-            Set<String> words = new HashSet<>(Arrays.asList(text.split("[^A-Z]+")));
-            boolean standalone = words.size() == 1;
-            boolean hasContext = !java.util.Collections.disjoint(words, contextKeywords);
-            if (!standalone && !hasContext) {
-                continue; // a rarity word buried in flavour text is not a rarity declaration
-            }
-            for (Map.Entry<String, ResourceLocation> entry : styleByRarity.entrySet()) {
-                String rarity = entry.getKey();
-                if (words.contains(rarity) && rank(rarity) > rank(bestRarity)) {
-                    bestRarity = rarity;
-                    bestStyle = entry.getValue();
-                }
-            }
+            lines.add(RarityDetect.sanitize(plain.serialize(line)));
         }
-        if (dump) {
+        RarityDetect.Match match = RarityDetect.detect(lines, contextKeywords, styleByRarity.keySet());
+        if (debug && debugDumps < 40) {
             debugDumps++;
-            log.info("[tooltip-borders] " + item.getType()
-                    + " -> " + (bestRarity == null ? "no-match" : bestRarity + " " + bestStyle) + " lore:" + dumped);
+            log.info("[tooltip-borders] " + item.getType() + " -> "
+                    + (match == null ? "no-match" : match.rarity() + " on '" + match.line() + "'")
+                    + " lore: '" + String.join("' | '", lines) + "'");
         }
-        return bestStyle;
-    }
-
-    /** Strip legacy {@code §x} codes, trim, and upper-case — eco lore ships literal section codes. */
-    private static String sanitize(String raw) {
-        return raw.replaceAll("§.", "").trim().toUpperCase(Locale.ROOT);
-    }
-
-    /** Tier index of a rarity word (higher = stronger); -1 for null/unknown so any real match beats it. */
-    private static int rank(String rarity) {
-        return rarity == null ? -1 : RANK.indexOf(rarity);
+        return match == null ? null : styleByRarity.get(match.rarity());
     }
 }

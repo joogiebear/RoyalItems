@@ -560,6 +560,40 @@ public final class FormattedItemService {
                 || meta instanceof BannerMeta;
     }
 
+    /**
+     * Why {@link #formatIfSupported} would leave this (non-ours) stack alone, or null when it would
+     * dress it. Exists for {@code /royalitems inspect} — the skip conditions are deliberate, and an
+     * admin asking "why isn't this item dressed" deserves the specific one.
+     */
+    public String skipReason(ItemStack stack) {
+        if (stack == null || stack.getType().isAir()) {
+            return "there is no item";
+        }
+        if (byMaterial.get(stack.getType()) == null) {
+            return "no definition or rule covers " + stack.getType();
+        }
+        if (!stack.hasItemMeta()) {
+            return null;
+        }
+        ItemMeta meta = stack.getItemMeta();
+        if (hasDynamicState(meta)) {
+            return "its vanilla state is its identity (potion, book, head, banner, …)";
+        }
+        if (meta.hasDisplayName()) {
+            return "it already has a custom name";
+        }
+        if (meta.hasLore()) {
+            return "it already has lore";
+        }
+        if (meta.hasEnchants()) {
+            return "it is enchanted";
+        }
+        if (!meta.getPersistentDataContainer().isEmpty()) {
+            return "another plugin owns it (persistent data present)";
+        }
+        return null;
+    }
+
     private NamespacedKey key(String name) {
         return tagKeys.computeIfAbsent(name, n -> new NamespacedKey(plugin, n));
     }
