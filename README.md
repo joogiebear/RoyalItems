@@ -9,7 +9,7 @@ diamond sword: it enchants, repairs, and works in every recipe and shop exactly 
 things that change are what the player *sees* (lore) and what a plugin can *read* (a persistent-data
 identity).
 
-Built for **Paper 1.21+**, Java 21. Lightweight, config-driven, and safe to run alongside custom-item
+Built for **Paper 26.2 or newer**, Java 21. Lightweight, config-driven, and safe to run alongside custom-item
 plugins like EcoItems — it never touches an item that already has an identity.
 
 ---
