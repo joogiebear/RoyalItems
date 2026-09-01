@@ -58,4 +58,29 @@ public final class FormattedItemDefinition {
     public String tooltipStyle() {
         return tooltipStyle;
     }
+
+    private String hash;
+
+    /**
+     * Content stamp over every field this definition owns, as a short hex string. Dressing writes it
+     * into the item's persistent data; the event paths compare it against the current definition and
+     * re-dress on mismatch — which is how a config edit reaches items dropped before it was made.
+     */
+    public String hash() {
+        if (hash == null) {
+            StringBuilder sb = new StringBuilder(id).append('\0').append(material.name()).append('\0')
+                    .append(displayName == null ? "" : displayName).append('\0');
+            for (String line : lore) {
+                sb.append(line).append('\0');
+            }
+            for (Map.Entry<String, String> tag : tags.entrySet()) {
+                sb.append(tag.getKey()).append('=').append(tag.getValue()).append('\0');
+            }
+            sb.append(tooltipStyle == null ? "" : tooltipStyle);
+            java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+            crc.update(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            hash = Long.toHexString(crc.getValue());
+        }
+        return hash;
+    }
 }

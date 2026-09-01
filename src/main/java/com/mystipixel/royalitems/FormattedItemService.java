@@ -56,6 +56,8 @@ public final class FormattedItemService {
 
     public static final String ITEM_ID = "item_id";
     public static final String FUEL_ID = "fuel_id";
+    /** PDC stamp of the definition an item was dressed with; a mismatch triggers a refresh. */
+    public static final String DEF_HASH = "def_hash";
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
     private static final MiniMessage MINI = MiniMessage.miniMessage();
@@ -350,6 +352,7 @@ public final class FormattedItemService {
         for (Map.Entry<String, String> tag : def.tags().entrySet()) {
             pdc.set(key(tag.getKey()), PersistentDataType.STRING, tag.getValue());
         }
+        pdc.set(key(DEF_HASH), PersistentDataType.STRING, def.hash());
         item.setItemMeta(meta);
 
         // Opt-in coloured tooltip border, drawn client-side from the resource pack sprite this style
@@ -435,19 +438,76 @@ public final class FormattedItemService {
 
     /**
      * A formatted version of {@code stack} if its material is supported and it is a plain vanilla item;
-     * otherwise {@code stack} unchanged. Never re-formats one of ours and never clobbers an item that
-     * already carries a name, lore, enchant, or another plugin's data (e.g. an EcoItem on the base
-     * material) — those keep their identity. The amount is preserved.
+     * otherwise {@code stack} unchanged. Never clobbers an item that already carries a name, lore,
+     * enchant, or another plugin's data (e.g. an EcoItem on the base material) — those keep their
+     * identity. The amount is preserved.
+     *
+     * <p>An item that is already ours is not re-formatted — but it IS refreshed when the definition it
+     * was dressed with has since changed (see {@link #refreshIfStale}), so config edits reach old
+     * items through the same events that dress new ones.
      */
     public ItemStack formatIfSupported(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
             return stack;
+        }
+        String ourId = getItemId(stack);
+        if (ourId != null) {
+            return refreshIfStale(stack, ourId);
         }
         FormattedItemDefinition def = byMaterial.get(stack.getType());
         if (def == null || looksCustom(stack)) {
             return stack;
         }
         return format(def.id(), stack.getAmount());
+    }
+
+    /**
+     * Re-apply the current definition to one of our items whose stamped {@code def_hash} no longer
+     * matches — the mechanism that lets a lore tweak or rarity change propagate to items dropped
+     * before the edit, through normal play, with no sweep.
+     *
+     * <p>Only the fields the definition owns are rewritten — name, lore, identity tags, the stamp and
+     * the tooltip style — on the item's <em>existing</em> meta, so enchants added at an anvil, damage,
+     * and anything else the player earned survive the refresh. An item whose definition was removed
+     * from the catalog, or whose material no longer matches it, is left exactly as it is.
+     */
+    private ItemStack refreshIfStale(ItemStack stack, String id) {
+        FormattedItemDefinition def = byId.get(id);
+        if (def == null || def.material() != stack.getType()) {
+            return stack;
+        }
+        if (def.hash().equals(readTag(stack, key(DEF_HASH)))) {
+            return stack;                        // dressed with the current definition — nothing to do
+        }
+        ItemStack updated = stack.clone();
+        ItemMeta meta = updated.getItemMeta();
+        if (meta == null) {
+            return stack;
+        }
+        if (def.displayName() != null) {
+            meta.displayName(text(def.displayName()));
+        }
+        List<Component> lines = new ArrayList<>();
+        for (String line : def.lore()) {
+            lines.add(text(line));
+        }
+        meta.lore(def.lore().isEmpty() ? null : lines);
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        for (Map.Entry<String, String> tag : def.tags().entrySet()) {
+            pdc.set(key(tag.getKey()), PersistentDataType.STRING, tag.getValue());
+        }
+        pdc.set(key(DEF_HASH), PersistentDataType.STRING, def.hash());
+        updated.setItemMeta(meta);
+        try {
+            if (def.tooltipStyle() != null && !def.tooltipStyle().isBlank()) {
+                updated.setData(DataComponentTypes.TOOLTIP_STYLE, Key.key(def.tooltipStyle()));
+            } else {
+                updated.resetData(DataComponentTypes.TOOLTIP_STYLE);
+            }
+        } catch (RuntimeException ignored) {
+            // an invalid style was already warned about at load; never let it block a refresh
+        }
+        return updated;
     }
 
     /** Dress every supported plain item in a player's inventory; returns how many stacks changed. */
