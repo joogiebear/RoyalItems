@@ -38,7 +38,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -173,8 +172,8 @@ public final class FormattedItemService {
     private int expandRules() {
         int count = 0;
         for (Material material : Material.values()) {
-            if (!material.isItem() || byMaterial.containsKey(material)) {
-                continue;   // not an obtainable item, or already claimed by an explicit entry / earlier rule
+            if (!isDressable(material) || byMaterial.containsKey(material)) {
+                continue;   // not a dressable item, or already claimed by an explicit entry / earlier rule
             }
             for (FormattingRule rule : rules) {
                 if (rule.matches(material) && register(expand(rule, material))) {
@@ -210,7 +209,7 @@ public final class FormattedItemService {
             tags.put(e.getKey(), apply(e.getValue(), ph));
         }
         return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags,
-                rule.sources(), rarity.tooltipStyle());
+                rarity.tooltipStyle());
     }
 
     /** Add a definition; false if its id was taken or the material cannot hold a dressed template. */
@@ -255,10 +254,15 @@ public final class FormattedItemService {
         return out;
     }
 
-    /** Every {@code .yml} under {@code dir} (recursively), skipping {@code _}-prefixed template files. */
+    /**
+     * Every {@code .yml} under {@code dir} (recursively), skipping {@code _}-prefixed template files, sorted
+     * by path so load order is deterministic — a file named to sort first (e.g. {@code 0-overrides.yml})
+     * reliably claims its ids before the generated catalog, so hand-tuned items win.
+     */
     private static List<File> yamlFiles(File dir) {
         List<File> out = new ArrayList<>();
         collect(dir, out);
+        out.sort(java.util.Comparator.comparing(File::getPath));
         return out;
     }
 
@@ -276,19 +280,43 @@ public final class FormattedItemService {
         }
     }
 
+    /**
+     * Parse one clean entry. Only the key is required — it is the {@code item_id} and, upper-cased, the
+     * default {@link Material} ({@code ender_pearl} → {@code ENDER_PEARL}). Everything else is optional and
+     * has a sensible default: {@code rarity} (common) drives the border, name colour and footer; the name
+     * auto-fills to the rarity-coloured title case of the key; the lore auto-fills to the Hypixel footer
+     * ({@code &8<category>}, blank, {@code <rarity>}). {@code fuel:} is shorthand for a {@code fuel_id} tag,
+     * {@code material:} overrides the material, and {@code tags:} still adds any extra identity.
+     */
     private FormattedItemDefinition parse(String id, ConfigurationSection sec) {
-        Material material = Material.matchMaterial(sec.getString("material", ""));
+        String materialName = sec.getString("material", id.toUpperCase(Locale.ROOT));
+        Material material = Material.matchMaterial(materialName);
         if (material == null) {
-            logger.warning("Formatted item '" + id + "' has an unknown material — skipped.");
+            logger.warning("Formatted item '" + id + "' has an unknown material '" + materialName + "' — skipped.");
             return null;
         }
-        String name = sec.getString("display-name", null);
-        List<String> lore = sec.getStringList("lore");
 
-        // Identity tags. item_id always resolves to the definition id so isFormattedItem() works, even if
-        // the config leaves the tags block out; a config value may add fuel_id and anything else.
+        Rarity rarity = rarities.getOrDefault(sec.getString("rarity", "common").toLowerCase(Locale.ROOT),
+                Rarity.DEFAULT);
+        String category = sec.getString("category", "Collection Item");
+
+        String name = sec.getString("name", sec.getString("display-name", null));
+        if (name == null) {
+            name = rarity.color() + title(id);
+        }
+
+        List<String> lore = sec.getStringList("lore");
+        if (lore.isEmpty()) {
+            lore = new ArrayList<>(List.of("&8" + category, "", rarity.display()));
+        }
+
+        // Identity tags: item_id is always the key; fuel: is shorthand for fuel_id; tags: adds any others.
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put(ITEM_ID, id);
+        String fuel = sec.getString("fuel", null);
+        if (fuel != null) {
+            tags.put(FUEL_ID, fuel);
+        }
         ConfigurationSection tagSec = sec.getConfigurationSection("tags");
         if (tagSec != null) {
             for (String k : tagSec.getKeys(false)) {
@@ -296,28 +324,8 @@ public final class FormattedItemService {
             }
         }
 
-        // Explicit items may name a tooltip-style directly, or inherit one from a rarity they reference.
-        String tooltipStyle = sec.getString("tooltip-style", null);
-        if (tooltipStyle == null) {
-            Rarity rarity = rarities.get(sec.getString("rarity", "").toLowerCase(Locale.ROOT));
-            if (rarity != null) {
-                tooltipStyle = rarity.tooltipStyle();
-            }
-        }
-
-        Set<FormattedItemDefinition.Source> sources = new LinkedHashSet<>();
-        List<String> raw = sec.getStringList("format-on");
-        if (raw.isEmpty()) {
-            sources.add(FormattedItemDefinition.Source.MINED);   // default: only mined blocks
-        } else {
-            for (String r : raw) {
-                FormattedItemDefinition.Source s = FormattedItemDefinition.Source.from(r);
-                if (s != null) {
-                    sources.add(s);
-                }
-            }
-        }
-        return new FormattedItemDefinition(id, material, name, lore, tags, sources, tooltipStyle);
+        String tooltipStyle = sec.getString("tooltip-style", rarity.tooltipStyle());
+        return new FormattedItemDefinition(id, material, name, lore, tags, tooltipStyle);
     }
 
     // ------------------------------------------------------------------ building
@@ -506,5 +514,18 @@ public final class FormattedItemService {
 
     public FormattedItemDefinition byMaterial(Material material) {
         return byMaterial.get(material);
+    }
+
+    /**
+     * Whether RoyalItems can dress this material: a real, obtainable item that can hold a name/lore/identity
+     * and whose vanilla name or state is not its identity (potions, maps, books, heads, banners, …). Used by
+     * the catalog exporter to enumerate exactly the items worth listing.
+     */
+    public boolean isDressable(Material material) {
+        if (material == null || !material.isItem() || material.isAir()) {
+            return false;
+        }
+        ItemMeta meta = new ItemStack(material).getItemMeta();
+        return meta != null && !hasDynamicState(meta);
     }
 }

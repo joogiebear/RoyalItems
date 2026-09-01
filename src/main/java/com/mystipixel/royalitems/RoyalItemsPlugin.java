@@ -9,9 +9,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
+import org.bukkit.configuration.ConfigurationSection;
 
 /**
  * Dresses vanilla drops with lore and a persistent-data identity, keeping the same Material so a formatted
@@ -26,6 +30,10 @@ public final class RoyalItemsPlugin extends JavaPlugin {
 
     private FormattedItemService service;
 
+    /** Opaque handle to the PacketEvents border listener (null if off/absent). Kept as Object so this
+     *  class never references a PacketEvents type — see {@link #setupTooltipBorders()}. */
+    private Object tooltipBorders;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -34,18 +42,68 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         service.reload();
 
         getServer().getServicesManager().register(FormattedItemService.class, service, this, ServicePriority.Normal);
-        getServer().getPluginManager().registerEvents(new FormatListener(service), this);
+        getServer().getPluginManager().registerEvents(new FormatListener(this, service), this);
 
         ItemCommand command = new ItemCommand(this, service);
         getCommand("royalitems").setExecutor(command);
         getCommand("royalitems").setTabCompleter(command);
 
+        setupTooltipBorders();
+        setupInventorySweep();
         setupMetrics();
         if (getConfig().getBoolean("update-checker", true)) {
             new UpdateChecker(this, "joogiebear/RoyalItems").check();
         }
 
         getLogger().info("RoyalItems enabled — " + service.all().size() + " formatted item(s).");
+    }
+
+    @Override
+    public void onDisable() {
+        if (tooltipBorders != null) {
+            TooltipBorderListener.disable(tooltipBorders);
+            tooltipBorders = null;
+        }
+    }
+
+    /**
+     * Turn on the universal rarity tooltip borders. Reads the rarity→style map from config into plain
+     * strings (no PacketEvents types here), then — only if the PacketEvents plugin is installed — hands
+     * off to {@link TooltipBorderListener#enable(Map)}. That class is the sole holder of PacketEvents
+     * references, so a missing PacketEvents just skips this step instead of failing to load the plugin.
+     */
+    private void setupTooltipBorders() {
+        if (!getConfig().getBoolean("tooltip-borders.enabled", true)) {
+            return;
+        }
+        Map<String, String> styles = new HashMap<>();
+        ConfigurationSection section = getConfig().getConfigurationSection("tooltip-borders.styles");
+        if (section != null) {
+            for (String key : section.getKeys(false)) {
+                String location = section.getString(key);
+                if (location != null && !location.isBlank()) {
+                    styles.put(key.trim().toUpperCase(Locale.ROOT), location.trim());
+                }
+            }
+        }
+        if (styles.isEmpty()) {
+            return;
+        }
+        if (getServer().getPluginManager().getPlugin("packetevents") == null) {
+            getLogger().warning("tooltip-borders is enabled but PacketEvents is not installed — rarity "
+                    + "borders will only appear on RoyalItems-dressed items. Install PacketEvents "
+                    + "(https://modrinth.com/plugin/packetevents) to extend them to every item.");
+            return;
+        }
+        java.util.List<String> context = getConfig().getStringList("tooltip-borders.context-keywords");
+        if (context.isEmpty()) {
+            context = java.util.List.of("TIER", "RARITY", "ROYAL");
+        }
+        boolean debug = getConfig().getBoolean("tooltip-borders.debug", false);
+        tooltipBorders = TooltipBorderListener.enable(styles, context, debug, getLogger());
+        getLogger().info("Rarity tooltip borders enabled for " + styles.size()
+                + " rarities via PacketEvents (covers all items on the wire)."
+                + (debug ? " [debug on]" : ""));
     }
 
     /** Anonymous usage stats via bStats. Inert until the project id is set; disable in plugins/bStats. */
@@ -57,6 +115,30 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         metrics.addCustomChart(new SingleLineChart("formatted_items", () -> service.all().size()));
         metrics.addCustomChart(new SimplePie("format_on_join",
                 () -> getConfig().getBoolean("format-on-join", false) ? "enabled" : "disabled"));
+    }
+
+    /**
+     * Optional periodic backstop. Dressing is normally event-driven (see {@link FormatListener} —
+     * drop/craft/harvest/pickup dress instantly, and closing any container dresses the inventory), which
+     * covers every normal way an item is obtained at zero idle cost. This timer is off by default
+     * ({@code format-sweep-seconds: 0}); enable it only to also catch items injected straight into an
+     * inventory with no GUI and no event (e.g. {@code /give} or a plugin API). {@code formatInventory}
+     * skips already-dressed and foreign items and only writes when a stack changed, so it stays cheap.
+     */
+    private void setupInventorySweep() {
+        long seconds = getConfig().getLong("format-sweep-seconds", 0);
+        if (seconds <= 0) {
+            return;
+        }
+        long ticks = seconds * 20L;
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+                if (service.worldEnabled(player.getWorld())) {
+                    service.formatInventory(player);
+                }
+            }
+        }, ticks, ticks);
+        getLogger().info("Inventory backstop sweep every " + seconds + "s (event-driven dressing is primary).");
     }
 
     /** The formatting service, for direct in-JVM access (other plugins should prefer the ServicesManager). */

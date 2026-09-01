@@ -4,6 +4,9 @@ main: com.mystipixel.royalitems.RoyalItemsPlugin
 api-version: '1.21'
 author: Mystipixel
 description: Dresses vanilla drops with lore and a PDC identity (item_id / fuel_id) for RoyalMC.
+# PacketEvents drives the universal rarity tooltip borders. Soft so RoyalItems still loads
+# (borders off) if it is absent; when present, PacketEvents enables first so its API is ready.
+softdepend: [packetevents]
 commands:
   royalitems:
     description: Give, reload, and inspect formatted items.

@@ -1,73 +1,37 @@
-# ─────────────────────────────────────────────────────────────────────────────
-#  RoyalItems — COPY-PASTE TEMPLATE
+# RoyalItems — item template (this file is NOT loaded; the leading underscore skips it).
 #
-#  This file is SKIPPED by the plugin (the leading "_" means it is never loaded),
-#  so nothing here takes effect — it is only a reference. To add custom lore to an
-#  item: copy one of the blocks below into a real items/*.yml file (mining.yml,
-#  combat.yml, or any of them — the file is just organization), uncomment it, edit,
-#  then run  /royalitems reload  in-game. No restart needed; items players already
-#  hold re-dress on their next login (format-on-join is on).
+# Most items live in the generated catalog (armor.yml, building.yml, materials.yml, …) — run
+# /royalitems export to (re)generate it. Hand-tuned items go in 0-overrides.yml, which sorts first and
+# wins. Copy an entry below into any items/*.yml and edit, then run /royalitems reload.
 #
-#  HOW IT WINS:  an explicit entry here beats any rule (rules.yml) for that
-#  material — `material:` is the match key, not the filename or the id.
-#
-#  LITERAL LORE:  unlike rules, explicit item lore is written out verbatim. The
-#  %placeholders% (%name%, %rarity%, %category_upper%, …) do NOT expand here —
-#  type the colours and words directly, as below.
-#
-#  RARITY COLOURS (house style):
-#    common     &f       uncommon   &a       rare       &9
-#    epic       &5       legendary  &6       mythic     &d
-#  Footer convention:  &<colour>&l<RARITY> <CATEGORY>     e.g.  &9&lRARE GEM
-#
-#  format-on — WHEN an item gets dressed (list any that apply):
-#    mined    broken as a block            craft    taken from a crafting result
-#    mob      dropped by a killed mob      harvest  right-click-harvested crop
-#    smith    output of a smithing table
-#  Omit it and the item still dresses on join / on demand, just not from an event.
-# ─────────────────────────────────────────────────────────────────────────────
+# Only the KEY is required. It is the item_id AND, upper-cased, the material (ender_pearl -> ENDER_PEARL).
+# Everything else is optional with a sensible default:
+#   rarity   : common (drives the border, the name colour, and the footer)
+#   name     : auto = rarity-coloured title case of the key ("Ender Pearl")
+#   lore     : auto = "&8<category>", blank, "<rarity>"   (e.g. "&8Collection Item" / "&f&lCOMMON")
+#   category : "Collection Item" (the grey descriptor line in the auto lore)
+#   material : the key upper-cased (override only when it differs from the key)
+#   fuel     : sets a fuel_id tag so RoyalMinions treats the item as minion fuel
+#   tags     : any extra PDC identity, key: value
+# Names/lore take legacy '&' codes OR MiniMessage (<red>, <#ff00ff>, <gradient:..>). Supported items
+# always format, however they are obtained — there is no per-source option.
 
 formatted-items:
 
-  # ── Example 1: a plain resource (matches the mining/farming/combat house style) ──
-  # example_resource:
-  #   material: COPPER_INGOT          # the vanilla material to override
-  #   display-name: "&aCopper Ingot"  # name coloured by rarity (uncommon = &a)
-  #   lore:
-  #     - "&8Collection Item"         # dark-grey usage tag
-  #     - ""
-  #     - "&a&lUNCOMMON METAL"        # bold RARITY CATEGORY footer
-  #   tags:
-  #     item_id: "copper_ingot"       # PDC identity — keep it unique across all files
-  #   format-on:
-  #     - mined
-  #     - craft
+  # Smallest possible entry — everything defaults (common, auto name + lore):
+  # example_min:
+  #   category: "Collection Item"
 
-  # ── Example 2: a fuel (adds a usage tag + an effect line, like coal) ──
+  # A rarer item with a custom name and lore:
+  # example_relic:
+  #   name: "&5Ancient Relic"
+  #   rarity: epic
+  #   lore:
+  #     - "&7A relic of a forgotten age."
+  #     - ""
+  #     - "&5&lEPIC ARTIFACT"
+
+  # A fuel item (RoyalMinions reads fuel_id):
   # example_fuel:
-  #   material: BLAZE_POWDER
-  #   display-name: "&6Blaze Powder"
-  #   lore:
-  #     - "&8Minion Fuel"
-  #     - "&8Collection Item"
-  #     - ""
-  #     - "&7Increases the speed of your minion"
-  #     - "&7by &a25%&7 for &e30 minutes&7."
-  #     - ""
-  #     - "&6&lRARE FUEL"
-  #   tags:
-  #     item_id: "blaze_powder"
-  #     fuel_id: "blaze_powder"       # add fuel_id if RoyalMinions should treat it as fuel
-
-  # ── Example 3: a prestige item (bespoke name + flavour, no Collection Item tag) ──
-  # example_special:
-  #   material: TRIDENT
-  #   display-name: "<gradient:#00ffd5:#0066ff>Riptide</gradient>"   # gradients work in names
-  #   lore:
-  #     - "&7Hurls the wielder through water."
-  #     - ""
-  #     - "&6&lLEGENDARY WEAPON"
-  #   tags:
-  #     item_id: "riptide"
-  #   format-on:
-  #     - craft
+  #   material: BLAZE_POWDER          # only needed because the key isn't the material name
+  #   fuel: blaze_powder

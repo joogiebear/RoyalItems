@@ -37,6 +37,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             case "reload" -> reload(sender);
             case "info" -> info(sender);
             case "formatinv" -> formatInv(sender, args);
+            case "export" -> export(sender);
             default -> usage(sender, label);
         }
         return true;
@@ -99,6 +100,22 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 + " to " + target.getName() + ".");
     }
 
+    private void export(CommandSender sender) {
+        if (!sender.hasPermission("royalitems.admin")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            return;
+        }
+        java.io.File dir = new java.io.File(plugin.getDataFolder(), "catalog-export");
+        try {
+            int total = CatalogExporter.export(service, dir);
+            sender.sendMessage(ChatColor.GREEN + "Exported " + total + " item(s) to "
+                    + ChatColor.WHITE + "catalog-export/" + ChatColor.GREEN
+                    + " — review, then move the files into items/.");
+        } catch (java.io.IOException ex) {
+            sender.sendMessage(ChatColor.RED + "Export failed: " + ex.getMessage());
+        }
+    }
+
     private void reload(CommandSender sender) {
         if (!sender.hasPermission("royalitems.reload")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
@@ -149,7 +166,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     }
 
     private void usage(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv>");
+        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv|export>");
     }
 
     @Override
@@ -165,6 +182,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             }
             if (sender.hasPermission("royalitems.admin")) {
                 subs.add("info");
+                subs.add("export");
             }
             if (sender.hasPermission("royalitems.formatinv")) {
                 subs.add("formatinv");

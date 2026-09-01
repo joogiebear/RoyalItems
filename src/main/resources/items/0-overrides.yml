@@ -1,0 +1,115 @@
+# RoyalItems — hand-tuned overrides. This file sorts first, so its entries win over the generated
+# catalog (armor/building/…); re-running `/royalitems export` never touches it. Put fuel items and
+# bespoke prestige items here. Schema: the key is the item_id and material; `rarity` drives the border,
+# name colour and footer; `name`/`lore` override the auto-generated ones; `fuel:` sets a fuel_id.
+
+formatted-items:
+
+  # Fuel — RoyalMinions reads fuel_id; `fuel:` is the shorthand for it.
+  coal:
+    fuel: coal
+    lore:
+      - "&8Collection Item"
+      - ""
+      - "&7Increases the speed of"
+      - "&7your minion by &a5%&7 for 30"
+      - "&7minutes!"
+      - ""
+      - "&f&lCOMMON ORE"
+
+  # Prestige items — bespoke names, lore and higher rarities.
+  golden_apple:
+    name: "&6Golden Apple"
+    rarity: rare
+    lore:
+      - "&7Restores health and grants absorption."
+      - ""
+      - "&9&lRARE FOOD"
+
+  enchanted_golden_apple:
+    name: "<gradient:#ffd700:#ff8c00>Enchanted Golden Apple</gradient>"
+    rarity: mythic
+    lore:
+      - "&7A fabled fruit of immense power."
+      - ""
+      - "&d&lMYTHIC FOOD"
+
+  nether_star:
+    name: "<gradient:#ffffff:#aa00aa>Nether Star</gradient>"
+    rarity: legendary
+    lore:
+      - "&7Torn from the heart of the Wither."
+      - ""
+      - "&6&lLEGENDARY MATERIAL"
+
+  elytra:
+    name: "&dElytra"
+    rarity: legendary
+    lore:
+      - "&7Membrane wings from the End cities."
+      - ""
+      - "&6&lLEGENDARY ARMOR"
+
+  totem_of_undying:
+    name: "&eTotem of Undying"
+    rarity: epic
+    lore:
+      - "&7Cheats death — once."
+      - ""
+      - "&5&lEPIC ARTIFACT"
+
+  heart_of_the_sea:
+    name: "&bHeart of the Sea"
+    rarity: rare
+    lore:
+      - "&7The core of a conduit."
+      - ""
+      - "&9&lRARE MATERIAL"
+
+  beacon:
+    name: "&bBeacon"
+    rarity: rare
+    lore:
+      - "&7Projects a guiding beam of power."
+      - ""
+      - "&9&lRARE BLOCK"
+
+  conduit:
+    name: "&3Conduit"
+    rarity: rare
+    lore:
+      - "&7Grants dominion over the deep."
+      - ""
+      - "&9&lRARE BLOCK"
+
+  netherite_ingot:
+    name: "&8&lNetherite Ingot"
+    rarity: epic
+    lore:
+      - "&7Forged from ancient debris."
+      - ""
+      - "&5&lEPIC METAL"
+
+  ancient_debris:
+    name: "&8Ancient Debris"
+    rarity: epic
+    lore:
+      - "&7The rarest ore in the Nether."
+      - ""
+      - "&5&lEPIC ORE"
+
+  dragon_egg:
+    name: "<gradient:#8800cc:#1a0033>Dragon Egg</gradient>"
+    rarity: mythic
+    lore:
+      - "&7The ultimate trophy of the End."
+      - ""
+      - "&d&lMYTHIC TROPHY"
+
+  experience_bottle:
+    name: "&aBottle o' Enchanting"
+    rarity: uncommon
+    lore:
+      - "&7Shatters into experience."
+      - ""
+      - "&a&lUNCOMMON CONSUMABLE"

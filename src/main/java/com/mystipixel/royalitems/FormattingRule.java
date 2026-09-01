@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+/* Rules dress whole families of items; supported items always format (no per-source opt-in). */
+
 /**
  * A pattern that dresses a whole family of items from one config block, so "every tool and every armour
  * piece" is a handful of rules instead of hundreds of entries. A rule matches materials by name glob
@@ -30,11 +32,10 @@ public final class FormattingRule {
     private final String nameTemplate;
     private final List<String> loreTemplate;
     private final Map<String, String> extraTags;   // PDC tags beyond item_id; values may hold placeholders
-    private final Set<FormattedItemDefinition.Source> sources;
 
     private FormattingRule(List<Pattern> globs, Set<Material> materials, String category, String defaultRarity,
                            Map<String, String> tierRarity, String nameTemplate, List<String> loreTemplate,
-                           Map<String, String> extraTags, Set<FormattedItemDefinition.Source> sources) {
+                           Map<String, String> extraTags) {
         this.globs = globs;
         this.materials = materials;
         this.category = category;
@@ -43,7 +44,6 @@ public final class FormattingRule {
         this.nameTemplate = nameTemplate;
         this.loreTemplate = loreTemplate;
         this.extraTags = extraTags;
-        this.sources = sources;
     }
 
     public static FormattingRule parse(ConfigurationSection sec) {
@@ -80,18 +80,8 @@ public final class FormattingRule {
             }
         }
 
-        Set<FormattedItemDefinition.Source> sources = EnumSet.noneOf(FormattedItemDefinition.Source.class);
-        for (String s : sec.getStringList("format-on")) {
-            FormattedItemDefinition.Source src = FormattedItemDefinition.Source.from(s);
-            if (src != null) {
-                sources.add(src);
-            }
-        }
-        if (sources.isEmpty()) {
-            sources.add(FormattedItemDefinition.Source.CRAFT);   // gear is crafted; sensible default
-        }
         return new FormattingRule(globs, materials, category, defaultRarity, tierRarity,
-                nameTemplate, loreTemplate, extraTags, sources);
+                nameTemplate, loreTemplate, extraTags);
     }
 
     /** Whether this rule applies to {@code material}. */
@@ -133,10 +123,6 @@ public final class FormattingRule {
 
     public Map<String, String> extraTags() {
         return extraTags;
-    }
-
-    public Set<FormattedItemDefinition.Source> sources() {
-        return sources;
     }
 
     /** Turn a glob ({@code *_SWORD}) into an anchored, case-insensitive pattern over the material name. */

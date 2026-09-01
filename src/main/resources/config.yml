@@ -24,5 +24,49 @@ disabled-worlds: []
 # does the same on demand.
 format-on-join: true
 
+# Dressing is event-driven: items format instantly when mined/crafted/harvested/picked up, and a
+# player's inventory is dressed whenever they close a container (bazaar, trade, chest) — which is when
+# bought/traded/withdrawn items arrive. That covers every normal way an item is obtained at no idle
+# cost, so this periodic backstop is OFF by default. Set it to a number of seconds only to also catch
+# items injected straight into an inventory with no GUI/event (e.g. /give or a plugin). 0 = disabled.
+format-sweep-seconds: 0
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Rarity tooltip borders (universal)
+# ─────────────────────────────────────────────────────────────────────────────
+# Draws a coloured border around the WHOLE tooltip box of any item, matched to its
+# rarity — green for uncommon, purple for epic, gold for legendary, and so on. Unlike
+# the rarities.yml `tooltip-style` (which only reaches items RoyalItems itself dresses),
+# this covers EVERYTHING a player sees — eco gear, vanilla drops, bazaar purchases,
+# minion items — because it is applied on the outgoing packet, reading each item's own
+# rarity lore line. It never changes the stored item, so nothing else is affected.
+#
+# Requires the PacketEvents plugin (https://modrinth.com/plugin/packetevents). Without it
+# RoyalItems still runs; borders just fall back to RoyalItems-dressed items only.
+#
+# The border textures must be in the player's resource pack under the `royalitems:`
+# namespace (the RoyalItems tooltip pack ships all six). An item pointing at a style the
+# pack lacks shows the missing-texture checkerboard, so only map rarities you have sprites
+# for. An item that already carries its own tooltip_style is left untouched.
+tooltip-borders:
+  enabled: true
+
+  # A rarity word is recognised when it is on its own lore line (e.g. `&5&lEPIC`) OR when it shares a
+  # line with one of these context words — so EcoArmor's `Tier: Royal Legendary` is matched, while a
+  # flavour line that merely says "a legendary blade" is not. Matched case-insensitively, whole words.
+  context-keywords: [TIER, RARITY, ROYAL]
+
+  # Map a rarity to its border. The KEY is matched against each of an item's lore lines with
+  # colours stripped, trimmed and upper-cased — so `&5&lEPIC` matches the key `EPIC`. These
+  # defaults match both the eco rarities (EcoItems/rarities/*.yml) and RoyalItems' own ladder.
+  # COMMON maps to a white border so common items read as a rarity too, matching the others.
+  styles:
+    COMMON: royalitems:common
+    UNCOMMON: royalitems:uncommon
+    RARE: royalitems:rare
+    EPIC: royalitems:epic
+    LEGENDARY: royalitems:legendary
+    MYTHIC: royalitems:mythic
+
 # Log a note in the console on startup if a newer release is available on GitHub.
 update-checker: true

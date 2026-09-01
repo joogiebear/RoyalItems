@@ -20,24 +20,24 @@ rarities:
   common:
     display: "&f&lCOMMON"
     color: "&f"
-    # tooltip-style: royalitems:common     # usually left plain
+    tooltip-style: royalitems:common     # white border, so common reads as a rarity like the rest
   uncommon:
     display: "&a&lUNCOMMON"
     color: "&a"
-    # tooltip-style: royalitems:uncommon
+    tooltip-style: royalitems:uncommon
   rare:
     display: "&9&lRARE"
     color: "&9"
-    # tooltip-style: royalitems:rare
+    tooltip-style: royalitems:rare
   epic:
     display: "&5&lEPIC"
     color: "&5"
-    # tooltip-style: royalitems:epic
+    tooltip-style: royalitems:epic
   legendary:
     display: "&6&lLEGENDARY"
     color: "&6"
-    # tooltip-style: royalitems:legendary
+    tooltip-style: royalitems:legendary
   mythic:
     display: "&d&lMYTHIC"
     color: "&d"
-    # tooltip-style: royalitems:mythic
+    tooltip-style: royalitems:mythic

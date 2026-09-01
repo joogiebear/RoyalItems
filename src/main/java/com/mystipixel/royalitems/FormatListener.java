@@ -1,33 +1,41 @@
 package com.mystipixel.royalitems;
 
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 
 /**
- * Dresses supported items the moment they are created or acquired — never by scanning inventories on a
- * timer. The granular creation events (mined / mob / harvest / craft / smith) respect each item's
- * {@code format-on} opt-in; the acquisition moments (chest loot, a furnace's output, and the optional
- * format-on-join) dress any supported item, since "you now hold this" is when everything should match.
- * Anything already carrying an identity is left alone by the service, and a disabled world is skipped.
+ * Dresses a supported item the instant it is created or acquired — mined, killed, harvested, crafted,
+ * smithed, looted, taken from a furnace, picked up, or (via {@link #onInventoryClose}) bought, traded or
+ * withdrawn from any GUI. There is no per-source opt-in: if the material is supported and the item is
+ * still plain, it is dressed. This event coverage replaces the old polling sweep — the closing of a
+ * container is exactly when a bought/traded item arrives, so no timer is needed. The service leaves any
+ * item that already carries a name, lore, enchant, or another plugin's data untouched; disabled worlds
+ * are skipped.
  */
 public final class FormatListener implements Listener {
 
+    private final Plugin plugin;
     private final FormattedItemService service;
 
-    public FormatListener(FormattedItemService service) {
+    public FormatListener(Plugin plugin, FormattedItemService service) {
+        this.plugin = plugin;
         this.service = service;
     }
 
@@ -37,8 +45,8 @@ public final class FormatListener implements Listener {
             return;
         }
         for (Item entity : event.getItems()) {
-            ItemStack formatted = formatFor(entity.getItemStack(), FormattedItemDefinition.Source.MINED);
-            if (formatted != null) {
+            ItemStack formatted = service.formatIfSupported(entity.getItemStack());
+            if (formatted != entity.getItemStack()) {
                 entity.setItemStack(formatted);
             }
         }
@@ -47,50 +55,35 @@ public final class FormatListener implements Listener {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (service.worldEnabled(event.getEntity().getWorld())) {
-            replaceIn(event.getDrops(), FormattedItemDefinition.Source.MOB);
+            replaceIn(event.getDrops());
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onHarvest(PlayerHarvestBlockEvent event) {
         if (service.worldEnabled(event.getPlayer().getWorld())) {
-            replaceIn(event.getItemsHarvested(), FormattedItemDefinition.Source.HARVEST);
+            replaceIn(event.getItemsHarvested());
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onCraft(CraftItemEvent event) {
-        if (!service.worldEnabled(event.getWhoClicked().getWorld())) {
-            return;
-        }
-        ItemStack formatted = formatFor(event.getCurrentItem(), FormattedItemDefinition.Source.CRAFT);
-        if (formatted != null) {
-            event.setCurrentItem(formatted);
+        if (service.worldEnabled(event.getWhoClicked().getWorld())) {
+            replaceCurrent(event);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onSmith(SmithItemEvent event) {
-        if (!service.worldEnabled(event.getWhoClicked().getWorld())) {
-            return;
-        }
-        ItemStack formatted = formatFor(event.getCurrentItem(), FormattedItemDefinition.Source.SMITH);
-        if (formatted != null) {
-            event.setCurrentItem(formatted);
+        if (service.worldEnabled(event.getWhoClicked().getWorld())) {
+            replaceCurrent(event);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onLoot(LootGenerateEvent event) {
-        if (event.getWorld() != null && !service.worldEnabled(event.getWorld())) {
-            return;
-        }
-        List<ItemStack> loot = event.getLoot();
-        for (int i = 0; i < loot.size(); i++) {
-            ItemStack formatted = service.formatIfSupported(loot.get(i));
-            if (formatted != loot.get(i)) {
-                loot.set(i, formatted);
-            }
+        if (event.getWorld() == null || service.worldEnabled(event.getWorld())) {
+            replaceIn(event.getLoot());
         }
     }
 
@@ -104,14 +97,36 @@ public final class FormatListener implements Listener {
         if (type != InventoryType.FURNACE && type != InventoryType.BLAST_FURNACE && type != InventoryType.SMOKER) {
             return;
         }
-        if (!service.worldEnabled(event.getWhoClicked().getWorld())) {
+        if (service.worldEnabled(event.getWhoClicked().getWorld())) {
+            replaceCurrent(event);
+        }
+    }
+
+    /** Dress an item the instant a player picks it up off the ground (traded, tossed, or otherwise). */
+    @EventHandler(ignoreCancelled = true)
+    public void onPickup(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player) || !service.worldEnabled(player.getWorld())) {
             return;
         }
-        ItemStack current = event.getCurrentItem();
-        ItemStack formatted = service.formatIfSupported(current);
-        if (current != null && formatted != current) {
-            event.setCurrentItem(formatted);
+        Item entity = event.getItem();
+        ItemStack formatted = service.formatIfSupported(entity.getItemStack());
+        if (formatted != entity.getItemStack()) {
+            entity.setItemStack(formatted);
         }
+    }
+
+    /**
+     * Dress a player's inventory when they close any container — a bazaar, a trade, a chest, or their own
+     * inventory. This is the moment a bought, traded or withdrawn item lands, so it is the catch-all that
+     * the polling sweep used to be. The pass is scheduled one tick later so the closing transaction has
+     * fully settled before the inventory is written.
+     */
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player) || !service.worldEnabled(player.getWorld())) {
+            return;
+        }
+        plugin.getServer().getScheduler().runTask(plugin, () -> service.formatInventory(player));
     }
 
     @EventHandler
@@ -121,25 +136,20 @@ public final class FormatListener implements Listener {
         }
     }
 
-    private void replaceIn(List<ItemStack> items, FormattedItemDefinition.Source source) {
+    private void replaceIn(List<ItemStack> items) {
         for (int i = 0; i < items.size(); i++) {
-            ItemStack formatted = formatFor(items.get(i), source);
-            if (formatted != null) {
+            ItemStack formatted = service.formatIfSupported(items.get(i));
+            if (formatted != items.get(i)) {
                 items.set(i, formatted);
             }
         }
     }
 
-    /** Format only when this material's definition opts in to {@code source}; null = leave the item as-is. */
-    private ItemStack formatFor(ItemStack stack, FormattedItemDefinition.Source source) {
-        if (stack == null) {
-            return null;
+    private void replaceCurrent(InventoryClickEvent event) {
+        ItemStack current = event.getCurrentItem();
+        ItemStack formatted = service.formatIfSupported(current);
+        if (current != null && formatted != current) {
+            event.setCurrentItem(formatted);
         }
-        FormattedItemDefinition def = service.byMaterial(stack.getType());
-        if (def == null || !def.formatsFrom(source)) {
-            return null;
-        }
-        ItemStack formatted = service.formatIfSupported(stack);
-        return formatted == stack ? null : formatted;   // unchanged (already custom) → nothing to write
     }
 }
