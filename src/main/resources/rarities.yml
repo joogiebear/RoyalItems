@@ -11,10 +11,11 @@
 # tooltip box for items of that rarity. This is drawn CLIENT-SIDE from a resource pack, so:
 #   1. The player must be running a resource pack that ships the matching sprites
 #      (assets/royalitems/textures/gui/sprites/tooltip/<id>_background.png and _frame.png).
-#      The RoyalItems tooltip pack provides all six — merge it into your server's pack.
+#      Supply these sprites yourself; no resource pack is bundled with this plugin.
 #   2. If you point at a style the pack does NOT have, that tooltip shows the missing-texture
 #      checkerboard. So only enable a rarity here once its sprite is actually in your live pack.
-# Leave `tooltip-style` off (as below) and tooltips render exactly as they do now.
+# Styles below are dormant unless tooltip-borders.enabled AND resource-pack-ready are true.
+# Without that opt-in, lore and rarity text use the normal Minecraft tooltip.
 
 rarities:
   common:

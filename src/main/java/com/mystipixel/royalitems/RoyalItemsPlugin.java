@@ -99,7 +99,9 @@ public final class RoyalItemsPlugin extends JavaPlugin {
      * references, so a missing PacketEvents just skips this step instead of failing to load the plugin.
      */
     private void setupTooltipBorders() {
-        if (!service.worldEnabled(null) || !getConfig().getBoolean("tooltip-borders.enabled", true)) {
+        if (!service.worldEnabled(null) || !getConfig().getBoolean("tooltip-borders.enabled", false)
+                || !getConfig().getBoolean("tooltip-borders.resource-pack-ready", false)
+                || !getConfig().getBoolean("tooltip-borders.include-custom-items", false)) {
             return;
         }
         Map<String, String> styles = new HashMap<>();

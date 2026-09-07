@@ -70,6 +70,7 @@ public final class FormattedItemService {
     private final NamespacedKey itemIdKey;
 
     private boolean globalEnabled = true;
+    private boolean customTooltipStyles;
     private boolean formatOnJoin;
     private final Set<String> disabledWorlds = new HashSet<>();
 
@@ -105,6 +106,7 @@ public final class FormattedItemService {
         rules.clear(); rules.addAll(next.rules);
         disabledWorlds.clear(); disabledWorlds.addAll(next.disabledWorlds);
         globalEnabled = next.globalEnabled;
+        customTooltipStyles = next.customTooltipStyles;
         formatOnJoin = next.formatOnJoin;
     }
 
@@ -116,6 +118,8 @@ public final class FormattedItemService {
         rules.clear();
 
         globalEnabled = plugin.getConfig().getBoolean("enabled", true);
+        customTooltipStyles = plugin.getConfig().getBoolean("tooltip-borders.enabled", false)
+                && plugin.getConfig().getBoolean("tooltip-borders.resource-pack-ready", false);
         formatOnJoin = plugin.getConfig().getBoolean("format-on-join", false);
         disabledWorlds.clear();
         for (String w : plugin.getConfig().getStringList("disabled-worlds")) {
@@ -239,7 +243,7 @@ public final class FormattedItemService {
             tags.put(e.getKey(), apply(e.getValue(), ph));
         }
         return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags,
-                rarity.tooltipStyle());
+                customTooltipStyles ? rarity.tooltipStyle() : null);
     }
 
     /** Add a definition; false if its id was taken or the material cannot hold a dressed template. */
@@ -362,7 +366,7 @@ public final class FormattedItemService {
             }
         }
 
-        String tooltipStyle = sec.getString("tooltip-style", rarity.tooltipStyle());
+        String tooltipStyle = customTooltipStyles ? sec.getString("tooltip-style", rarity.tooltipStyle()) : null;
         if (tooltipStyle != null && !tooltipStyle.isBlank()) Key.key(tooltipStyle);
         return new FormattedItemDefinition(id, material, name, lore, tags, tooltipStyle);
     }
@@ -485,7 +489,8 @@ public final class FormattedItemService {
         if (def == null || def.material() != stack.getType()) {
             return stack;
         }
-        if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null) {
+        if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null
+                && !needsStyleCleanup(stack.getItemMeta())) {
             return stack;                        // dressed with the current definition — nothing to do
         }
         return dress(stack, def, false);
@@ -532,9 +537,11 @@ public final class FormattedItemService {
         pdc.set(key(DEF_HASH), PersistentDataType.STRING, def.hash());
         pdc.set(key(OWNED_TAGS), PersistentDataType.STRING, String.join(",", new java.util.TreeSet<>(def.tags().keySet())));
         NamespacedKey currentStyle = meta.getTooltipStyle();
-        String desiredStyle = def.tooltipStyle() == null || def.tooltipStyle().isBlank() ? "" : Key.key(def.tooltipStyle()).asString();
+        String desiredStyle = !customTooltipStyles || def.tooltipStyle() == null || def.tooltipStyle().isBlank()
+                ? "" : Key.key(def.tooltipStyle()).asString();
         boolean writeStyle = (fresh && currentStyle == null)
-                || owns(pdc, STYLE_STAMP, currentStyle == null ? "" : currentStyle.asString());
+                || owns(pdc, STYLE_STAMP, currentStyle == null ? "" : currentStyle.asString())
+                || (!fresh && needsStyleCleanup(meta));
         pdc.set(key(STYLE_STAMP), PersistentDataType.STRING, desiredStyle);
         if (writeStyle) {
             if (!desiredStyle.isEmpty()) {
@@ -549,6 +556,16 @@ public final class FormattedItemService {
 
     private boolean owns(PersistentDataContainer pdc, String stamp, String value) {
         return value.equals(pdc.get(key(stamp), PersistentDataType.STRING));
+    }
+
+    private boolean needsStyleCleanup(ItemMeta meta) {
+        NamespacedKey style = meta.getTooltipStyle();
+        if (customTooltipStyles || style == null) return false;
+        String previous = meta.getPersistentDataContainer().get(key(STYLE_STAMP), PersistentDataType.STRING);
+        if (previous != null) return previous.equals(style.asString());
+        // Only the six styles shipped by older RoyalItems defaults are safe to infer ownership of.
+        return style.getNamespace().equals("royalitems") && Set.of("common", "uncommon", "rare", "epic", "legendary", "mythic")
+                .contains(style.getKey());
     }
 
     private static String fingerprint(Component component) {

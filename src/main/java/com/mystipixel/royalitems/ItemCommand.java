@@ -179,9 +179,11 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             return;
         }
         var cfg = plugin.getConfig();
-        if (!cfg.getBoolean("tooltip-borders.enabled", true)) {
+        if (!cfg.getBoolean("tooltip-borders.enabled", false)
+                || !cfg.getBoolean("tooltip-borders.resource-pack-ready", false)
+                || !cfg.getBoolean("tooltip-borders.include-custom-items", false)) {
             sender.sendMessage(ChatColor.GRAY + "Border:   "
-                    + ChatColor.YELLOW + "none — tooltip-borders is disabled in config");
+                    + ChatColor.YELLOW + "vanilla — custom packet borders are not opted in (rarity lore still works)");
             return;
         }
         var section = cfg.getConfigurationSection("tooltip-borders.styles");

@@ -90,7 +90,18 @@ class RuntimeReloadTest {
         verifyNoInteractions(scheduler);
     }
 
+    @Test void oldEnabledFlagAloneCannotActivatePacketBorders() {
+        config.set("tooltip-borders.enabled", true);
+        config.set("tooltip-borders.styles.EPIC", "royalitems:epic");
+        try (var borders = mockStatic(TooltipBorderListener.class)) {
+            plugin.reloadFormatting();
+            borders.verifyNoInteractions();
+        }
+    }
+
     @Test void reloadReplacesAndDisablesPacketListener() {
+        config.set("tooltip-borders.resource-pack-ready", true);
+        config.set("tooltip-borders.include-custom-items", true);
         config.set("tooltip-borders.enabled", true);
         config.set("tooltip-borders.styles.EPIC", "royalitems:epic");
         when(plugin.getServer().getPluginManager().isPluginEnabled("packetevents")).thenReturn(true);

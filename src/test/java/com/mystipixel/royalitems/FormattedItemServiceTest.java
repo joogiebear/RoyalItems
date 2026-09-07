@@ -190,6 +190,51 @@ class FormattedItemServiceTest {
         assertEquals(plain.style, service.formatIfSupported(dressed).getItemMeta().getTooltipStyle());
     }
 
+    @Test void legacyBrokenRoyalStyleIsRemovedButLoreSurvives() throws Exception {
+        define(Material.COAL, "Coal", List.of("Common"), Map.of());
+        StackState old = new StackState(Material.COAL, ItemMeta.class);
+        old.tags.put(new NamespacedKey("royalitems", "item_id"), "coal");
+        old.style = new NamespacedKey("royalitems", "common");
+        old.lore = List.of(Component.text("COMMON"));
+        ItemStack healed = service.formatIfSupported(old.stack);
+        assertNull(healed.getItemMeta().getTooltipStyle());
+        assertEquals(old.lore, healed.getItemMeta().lore());
+        assertEquals("coal", service.getItemId(healed));
+    }
+
+    @Test void stampedStyleIsCleanedEvenWhenDefinitionHashMatches() throws Exception {
+        define(Material.COAL, "Coal", List.of("Common"), Map.of());
+        ItemStack dressed = service.formatIfSupported(new StackState(Material.COAL, ItemMeta.class).stack);
+        StackState state = states.get(dressed);
+        state.style = new NamespacedKey("royalitems", "rare");
+        state.tags.put(new NamespacedKey("royalitems", "_ri_style"), "royalitems:rare");
+        ItemStack healed = service.formatIfSupported(dressed);
+        assertNull(healed.getItemMeta().getTooltipStyle());
+        assertSame(healed, service.formatIfSupported(healed));
+    }
+
+    @Test void legacyForeignStyleIsNotRemoved() throws Exception {
+        define(Material.COAL, "Coal", List.of(), Map.of());
+        StackState old = new StackState(Material.COAL, ItemMeta.class);
+        old.tags.put(new NamespacedKey("royalitems", "item_id"), "coal");
+        old.style = new NamespacedKey("ecoitems", "custom");
+        assertEquals(old.style, service.formatIfSupported(old.stack).getItemMeta().getTooltipStyle());
+    }
+
+    @Test void configuredStylesRequireExplicitOptIn() throws Exception {
+        var original = define(Material.COAL, "Coal", List.of("Common"), Map.of());
+        var styled = new FormattedItemDefinition(original.id(), original.material(), original.displayName(),
+                original.lore(), original.tags(), "royalitems:common");
+        this.<Map<String, FormattedItemDefinition>>field("byId").put("coal", styled);
+        this.<Map<Material, FormattedItemDefinition>>field("byMaterial").put(styled.material(), styled);
+        assertNull(service.formatIfSupported(new StackState(Material.COAL, ItemMeta.class).stack).getItemMeta().getTooltipStyle());
+        var setting = FormattedItemService.class.getDeclaredField("customTooltipStyles");
+        setting.setAccessible(true);
+        setting.set(service, true);
+        assertEquals(new NamespacedKey("royalitems", "common"),
+                service.formatIfSupported(new StackState(Material.COAL, ItemMeta.class).stack).getItemMeta().getTooltipStyle());
+    }
+
     private final class StackState {
         final Material material;
         final Class<? extends ItemMeta> metaClass;

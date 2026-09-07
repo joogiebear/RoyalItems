@@ -5,7 +5,7 @@
 
     <groupId>com.mystipixel</groupId>
     <artifactId>royalitems</artifactId>
-    <version>0.2.0</version>
+    <version>2026.37.0</version>
     <packaging>jar</packaging>
 
     <name>RoyalItems</name>
@@ -65,7 +65,7 @@
     </dependencies>
 
     <build>
-        <finalName>RoyalItems</finalName>
+        <finalName>royalitems-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
