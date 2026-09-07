@@ -16,7 +16,6 @@ import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 
@@ -31,10 +30,10 @@ import java.util.List;
  */
 public final class FormatListener implements Listener {
 
-    private final Plugin plugin;
+    private final RoyalItemsPlugin plugin;
     private final FormattedItemService service;
 
-    public FormatListener(Plugin plugin, FormattedItemService service) {
+    public FormatListener(RoyalItemsPlugin plugin, FormattedItemService service) {
         this.plugin = plugin;
         this.service = service;
     }
@@ -82,7 +81,7 @@ public final class FormatListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onLoot(LootGenerateEvent event) {
-        if (event.getWorld() == null || service.worldEnabled(event.getWorld())) {
+        if (service.worldEnabled(event.getWorld())) {
             replaceIn(event.getLoot());
         }
     }
@@ -131,9 +130,20 @@ public final class FormatListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        plugin.updateBorderAudience(event.getPlayer());
         if (service.formatOnJoin() && service.worldEnabled(event.getPlayer().getWorld())) {
             service.formatInventory(event.getPlayer());
         }
+    }
+
+    @EventHandler
+    public void onWorldChange(org.bukkit.event.player.PlayerChangedWorldEvent event) {
+        plugin.updateBorderAudience(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        plugin.removeBorderAudience(event.getPlayer());
     }
 
     private void replaceIn(List<ItemStack> items) {

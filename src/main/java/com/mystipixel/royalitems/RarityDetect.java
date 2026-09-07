@@ -59,6 +59,7 @@ public final class RarityDetect {
                 continue;
             }
             Set<String> words = new HashSet<>(Arrays.asList(text.split("[^A-Z]+")));
+            words.remove("");
             boolean standalone = words.size() == 1;
             boolean hasContext = !Collections.disjoint(words, contextKeywords);
             if (!standalone && !hasContext) {

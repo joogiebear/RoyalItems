@@ -15,7 +15,6 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWi
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,15 +47,18 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
     private final PlainTextComponentSerializer plain = PlainTextComponentSerializer.plainText();
     private final boolean debug;
     private final java.util.logging.Logger log;
+    private final java.util.function.Predicate<java.util.UUID> audience;
     private int debugDumps = 0; // cap the per-item lore dump so a busy server can't be flooded
 
     public TooltipBorderListener(Map<String, ResourceLocation> styleByRarity, Set<String> contextKeywords,
-                                 boolean debug, java.util.logging.Logger log) {
+                                 boolean debug, java.util.logging.Logger log,
+                                 java.util.function.Predicate<java.util.UUID> audience) {
         super(PacketListenerPriority.LOW);
         this.styleByRarity = styleByRarity;
         this.contextKeywords = contextKeywords;
         this.debug = debug;
         this.log = log;
+        this.audience = audience;
     }
 
     /**
@@ -65,7 +67,8 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
      * that keeps every PacketEvents reference inside this class, which only loads when the plugin is present.
      */
     public static Object enable(Map<String, String> rawStyles, List<String> contextKeywords,
-                                boolean debug, java.util.logging.Logger log) {
+                                boolean debug, java.util.logging.Logger log,
+                                java.util.function.Predicate<java.util.UUID> audience) {
         Map<String, ResourceLocation> styles = new HashMap<>();
         for (Map.Entry<String, String> entry : rawStyles.entrySet()) {
             styles.put(entry.getKey(), new ResourceLocation(entry.getValue()));
@@ -74,7 +77,7 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         for (String keyword : contextKeywords) {
             context.add(keyword.trim().toUpperCase(Locale.ROOT));
         }
-        TooltipBorderListener listener = new TooltipBorderListener(styles, context, debug, log);
+        TooltipBorderListener listener = new TooltipBorderListener(styles, context, debug, log, audience);
         PacketEvents.getAPI().getEventManager().registerListener(listener);
         return listener;
     }
@@ -88,6 +91,8 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
+        if (event.getUser() == null || event.getUser().getUUID() == null
+                || !audience.test(event.getUser().getUUID())) return;
         if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
             WrapperPlayServerSetSlot packet = new WrapperPlayServerSetSlot(event);
             ItemStack item = packet.getItem();

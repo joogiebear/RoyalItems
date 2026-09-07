@@ -25,8 +25,8 @@ public final class FormattedItemDefinition {
         this.id = id;
         this.material = material;
         this.displayName = displayName;
-        this.lore = lore;
-        this.tags = tags;
+        this.lore = List.copyOf(lore);
+        this.tags = java.util.Collections.unmodifiableMap(new java.util.TreeMap<>(tags));
         this.tooltipStyle = tooltipStyle;
     }
 

@@ -1,6 +1,5 @@
 package com.mystipixel.royalitems;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -46,7 +45,7 @@ import java.util.logging.Logger;
 
 /**
  * The heart of RoyalItems and its public API. Loads the config into maps (by id and by material), builds
- * one template ItemStack per definition and clones it to format — never rebuilding meta per drop — and
+ * one template ItemStack per definition for explicit generation, preserves input state when dressing, and
  * reads/writes the identity in persistent data. Identity is the PDC ({@code item_id}, {@code fuel_id},
  * ...); the name and lore are only what a player sees, never read for logic.
  *
@@ -58,6 +57,10 @@ public final class FormattedItemService {
     public static final String FUEL_ID = "fuel_id";
     /** PDC stamp of the definition an item was dressed with; a mismatch triggers a refresh. */
     public static final String DEF_HASH = "def_hash";
+    private static final String OWNED_TAGS = "_ri_owned_tags";
+    private static final String NAME_STAMP = "_ri_name";
+    private static final String LORE_STAMP = "_ri_lore";
+    private static final String STYLE_STAMP = "_ri_style";
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
     private static final MiniMessage MINI = MiniMessage.miniMessage();
@@ -92,6 +95,20 @@ public final class FormattedItemService {
      * material wins over any later one. So runtime is only ever a map lookup; the expansion is one-time.
      */
     public void reload() {
+        // Build away from the published service. A broken file must not erase the live catalog.
+        FormattedItemService next = new FormattedItemService(plugin);
+        next.load();
+        byId.clear(); byId.putAll(next.byId);
+        byMaterial.clear(); byMaterial.putAll(next.byMaterial);
+        templates.clear(); templates.putAll(next.templates);
+        rarities.clear(); rarities.putAll(next.rarities);
+        rules.clear(); rules.addAll(next.rules);
+        disabledWorlds.clear(); disabledWorlds.addAll(next.disabledWorlds);
+        globalEnabled = next.globalEnabled;
+        formatOnJoin = next.formatOnJoin;
+    }
+
+    private void load() {
         byId.clear();
         byMaterial.clear();
         templates.clear();
@@ -110,7 +127,7 @@ public final class FormattedItemService {
 
         loadSection(plugin.getConfig().getConfigurationSection("formatted-items"));
         for (File file : yamlFiles(new File(plugin.getDataFolder(), "items"))) {
-            loadSection(YamlConfiguration.loadConfiguration(file).getConfigurationSection("formatted-items"));
+            loadSection(readYaml(file).getConfigurationSection("formatted-items"));
         }
         int explicit = byId.size();
 
@@ -124,7 +141,17 @@ public final class FormattedItemService {
 
     private ConfigurationSection fileSection(String fileName, String key) {
         File file = new File(plugin.getDataFolder(), fileName);
-        return file.isFile() ? YamlConfiguration.loadConfiguration(file).getConfigurationSection(key) : null;
+        return file.isFile() ? readYaml(file).getConfigurationSection(key) : null;
+    }
+
+    private static YamlConfiguration readYaml(File file) {
+        YamlConfiguration yaml = new YamlConfiguration();
+        try {
+            yaml.load(file);
+            return yaml;
+        } catch (java.io.IOException | org.bukkit.configuration.InvalidConfigurationException ex) {
+            throw new IllegalArgumentException("Cannot load " + file.getName() + ": " + ex.getMessage(), ex);
+        }
     }
 
     private void loadRarities(ConfigurationSection sec) {
@@ -208,6 +235,7 @@ public final class FormattedItemService {
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put("item_id", id);
         for (Map.Entry<String, String> e : rule.extraTags().entrySet()) {
+            validateTag(e.getKey());
             tags.put(e.getKey(), apply(e.getValue(), ph));
         }
         return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags,
@@ -232,6 +260,14 @@ public final class FormattedItemService {
         }
         templates.put(def.id(), template);
         return true;
+    }
+
+    private void validateTag(String tag) {
+        if (!tag.matches("[a-z0-9._/-]+")) throw new IllegalArgumentException("Invalid lowercase identity tag: " + tag);
+        if (tag.equals(ITEM_ID) || tag.equals(DEF_HASH) || tag.startsWith("_ri_")) {
+            throw new IllegalArgumentException("Reserved RoyalItems tag: " + tag);
+        }
+        key(tag); // Validate before publishing any definitions.
     }
 
     private static String title(String raw) {
@@ -293,9 +329,8 @@ public final class FormattedItemService {
     private FormattedItemDefinition parse(String id, ConfigurationSection sec) {
         String materialName = sec.getString("material", id.toUpperCase(Locale.ROOT));
         Material material = Material.matchMaterial(materialName);
-        if (material == null) {
-            logger.warning("Formatted item '" + id + "' has an unknown material '" + materialName + "' — skipped.");
-            return null;
+        if (material == null || !material.isItem() || material.isAir()) {
+            throw new IllegalArgumentException("Formatted item '" + id + "' has invalid item material '" + materialName + "'");
         }
 
         Rarity rarity = rarities.getOrDefault(sec.getString("rarity", "common").toLowerCase(Locale.ROOT),
@@ -322,51 +357,20 @@ public final class FormattedItemService {
         ConfigurationSection tagSec = sec.getConfigurationSection("tags");
         if (tagSec != null) {
             for (String k : tagSec.getKeys(false)) {
+                validateTag(k);
                 tags.put(k, tagSec.getString(k));
             }
         }
 
         String tooltipStyle = sec.getString("tooltip-style", rarity.tooltipStyle());
+        if (tooltipStyle != null && !tooltipStyle.isBlank()) Key.key(tooltipStyle);
         return new FormattedItemDefinition(id, material, name, lore, tags, tooltipStyle);
     }
 
     // ------------------------------------------------------------------ building
 
     private ItemStack build(FormattedItemDefinition def, int amount) {
-        ItemStack item = new ItemStack(def.material(), Math.max(1, amount));
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;   // this material cannot hold meta (some technical items) — nothing to dress
-        }
-        if (def.displayName() != null) {
-            meta.displayName(text(def.displayName()));
-        }
-        if (!def.lore().isEmpty()) {
-            List<Component> lines = new ArrayList<>();
-            for (String line : def.lore()) {
-                lines.add(text(line));
-            }
-            meta.lore(lines);
-        }
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        for (Map.Entry<String, String> tag : def.tags().entrySet()) {
-            pdc.set(key(tag.getKey()), PersistentDataType.STRING, tag.getValue());
-        }
-        pdc.set(key(DEF_HASH), PersistentDataType.STRING, def.hash());
-        item.setItemMeta(meta);
-
-        // Opt-in coloured tooltip border, drawn client-side from the resource pack sprite this style
-        // names. Set only when a style is configured — an item pointing at a sprite the pack lacks
-        // renders the missing-texture checkerboard, so default (null) leaves the vanilla tooltip alone.
-        if (def.tooltipStyle() != null && !def.tooltipStyle().isBlank()) {
-            try {
-                item.setData(DataComponentTypes.TOOLTIP_STYLE, Key.key(def.tooltipStyle()));
-            } catch (RuntimeException ex) {
-                logger.warning("Item '" + def.id() + "' has an invalid tooltip-style '"
-                        + def.tooltipStyle() + "' — must be a resource location like royalitems:rare. Skipped.");
-            }
-        }
-        return item;
+        return dress(new ItemStack(def.material(), Math.max(1, amount)), def, true);
     }
 
     /**
@@ -447,7 +451,7 @@ public final class FormattedItemService {
      * items through the same events that dress new ones.
      */
     public ItemStack formatIfSupported(ItemStack stack) {
-        if (stack == null || stack.getType().isAir()) {
+        if (!globalEnabled || stack == null || stack.getType().isAir()) {
             return stack;
         }
         String ourId = getItemId(stack);
@@ -458,7 +462,12 @@ public final class FormattedItemService {
         if (def == null || looksCustom(stack)) {
             return stack;
         }
-        return format(def.id(), stack.getAmount());
+        return dress(stack, def, true);
+    }
+
+    /** Automatic formatting for integrations with world context. The legacy overload checks the master switch. */
+    public ItemStack formatIfSupported(ItemStack stack, World world) {
+        return worldEnabled(world) ? formatIfSupported(stack) : stack;
     }
 
     /**
@@ -476,42 +485,93 @@ public final class FormattedItemService {
         if (def == null || def.material() != stack.getType()) {
             return stack;
         }
-        if (def.hash().equals(readTag(stack, key(DEF_HASH)))) {
+        if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null) {
             return stack;                        // dressed with the current definition — nothing to do
         }
+        return dress(stack, def, false);
+    }
+
+    /** Clone the input, preserving every component except fields explicitly owned by this definition. */
+    private ItemStack dress(ItemStack stack, FormattedItemDefinition def, boolean fresh) {
         ItemStack updated = stack.clone();
         ItemMeta meta = updated.getItemMeta();
         if (meta == null) {
             return stack;
         }
-        if (def.displayName() != null) {
-            meta.displayName(text(def.displayName()));
-        }
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        Component name = def.displayName() == null ? null : text(def.displayName());
         List<Component> lines = new ArrayList<>();
         for (String line : def.lore()) {
             lines.add(text(line));
         }
-        meta.lore(def.lore().isEmpty() ? null : lines);
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        List<Component> lore = lines.isEmpty() ? null : lines;
+        // Older items have no ownership stamps: preserve their presentation rather than guess
+        // whether a player renamed them. Adopt the desired baseline for subsequent refreshes.
+        if (fresh || owns(pdc, NAME_STAMP, fingerprint(meta.displayName()))) meta.displayName(name);
+        if (fresh || owns(pdc, LORE_STAMP, loreFingerprint(meta.lore()))) meta.lore(lore);
+        pdc.set(key(NAME_STAMP), PersistentDataType.STRING, fingerprint(name));
+        pdc.set(key(LORE_STAMP), PersistentDataType.STRING, loreFingerprint(lore));
+
+        String previous = pdc.get(key(OWNED_TAGS), PersistentDataType.STRING);
+        Set<String> oldTags = new HashSet<>();
+        if (previous != null) {
+            for (String tag : previous.split(",")) if (!tag.isEmpty()) oldTags.add(tag);
+        } else if (!fresh) {
+            // v0.1 used our namespace for identity tags but did not record the owned keys.
+            for (NamespacedKey tag : pdc.getKeys()) {
+                if (tag.getNamespace().equals(itemIdKey.getNamespace())
+                        && !tag.getKey().startsWith("_ri_") && !tag.getKey().equals(DEF_HASH)) oldTags.add(tag.getKey());
+            }
+        }
+        for (String old : oldTags) {
+            if (!def.tags().containsKey(old)) pdc.remove(key(old));
+        }
         for (Map.Entry<String, String> tag : def.tags().entrySet()) {
             pdc.set(key(tag.getKey()), PersistentDataType.STRING, tag.getValue());
         }
         pdc.set(key(DEF_HASH), PersistentDataType.STRING, def.hash());
-        updated.setItemMeta(meta);
-        try {
-            if (def.tooltipStyle() != null && !def.tooltipStyle().isBlank()) {
-                updated.setData(DataComponentTypes.TOOLTIP_STYLE, Key.key(def.tooltipStyle()));
+        pdc.set(key(OWNED_TAGS), PersistentDataType.STRING, String.join(",", new java.util.TreeSet<>(def.tags().keySet())));
+        NamespacedKey currentStyle = meta.getTooltipStyle();
+        String desiredStyle = def.tooltipStyle() == null || def.tooltipStyle().isBlank() ? "" : Key.key(def.tooltipStyle()).asString();
+        boolean writeStyle = (fresh && currentStyle == null)
+                || owns(pdc, STYLE_STAMP, currentStyle == null ? "" : currentStyle.asString());
+        pdc.set(key(STYLE_STAMP), PersistentDataType.STRING, desiredStyle);
+        if (writeStyle) {
+            if (!desiredStyle.isEmpty()) {
+                meta.setTooltipStyle(NamespacedKey.fromString(desiredStyle));
             } else {
-                updated.resetData(DataComponentTypes.TOOLTIP_STYLE);
+                meta.setTooltipStyle(null);
             }
-        } catch (RuntimeException ignored) {
-            // an invalid style was already warned about at load; never let it block a refresh
         }
+        updated.setItemMeta(meta);
         return updated;
+    }
+
+    private boolean owns(PersistentDataContainer pdc, String stamp, String value) {
+        return value.equals(pdc.get(key(stamp), PersistentDataType.STRING));
+    }
+
+    private static String fingerprint(Component component) {
+        return digest(component == null ? "null" : net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
+    }
+
+    private static String loreFingerprint(List<Component> lines) {
+        return digest(lines == null || lines.isEmpty() ? "null" : lines.stream().map(FormattedItemService::fingerprint)
+                .collect(java.util.stream.Collectors.joining("\n")));
+    }
+
+    private static String digest(String value) {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException ex) {
+            throw new AssertionError("Java must provide SHA-256", ex);
+        }
     }
 
     /** Dress every supported plain item in a player's inventory; returns how many stacks changed. */
     public int formatInventory(Player player) {
+        if (!player.isOnline() || !worldEnabled(player.getWorld())) return 0;
         ItemStack[] contents = player.getInventory().getContents();
         int changed = 0;
         for (int i = 0; i < contents.length; i++) {
@@ -533,6 +593,7 @@ public final class FormattedItemService {
         }
         ItemMeta meta = stack.getItemMeta();
         return meta.hasDisplayName() || meta.hasLore() || meta.hasEnchants()
+                || meta.hasItemName() || meta.hasCustomModelDataComponent()
                 || !meta.getPersistentDataContainer().isEmpty()
                 || hasDynamicState(meta);
     }
@@ -588,6 +649,9 @@ public final class FormattedItemService {
         if (meta.hasEnchants()) {
             return "it is enchanted";
         }
+        if (meta.hasItemName() || meta.hasCustomModelDataComponent()) {
+            return "it already has a custom item name or model";
+        }
         if (!meta.getPersistentDataContainer().isEmpty()) {
             return "another plugin owns it (persistent data present)";
         }
@@ -599,7 +663,7 @@ public final class FormattedItemService {
     }
 
     public Collection<FormattedItemDefinition> all() {
-        return byId.values();
+        return List.copyOf(byId.values());
     }
 
     public FormattedItemDefinition byId(String id) {

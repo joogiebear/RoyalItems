@@ -31,7 +31,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
-        String sub = args.length >= 1 ? args[0].toLowerCase() : "";
+        String sub = args.length >= 1 ? args[0].toLowerCase(java.util.Locale.ROOT) : "";
         switch (sub) {
             case "give" -> give(sender, args);
             case "reload" -> reload(sender);
@@ -172,8 +172,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
 
     /** The border half of {@link #inspect}: which rarity the packet layer would see, and why. */
     private void inspectBorder(CommandSender sender, org.bukkit.inventory.ItemStack held) {
-        net.kyori.adventure.key.Key explicit =
-                held.getData(io.papermc.paper.datacomponent.DataComponentTypes.TOOLTIP_STYLE);
+        net.kyori.adventure.key.Key explicit = held.getItemMeta().getTooltipStyle();
         if (explicit != null) {
             sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE + explicit
                     + ChatColor.GRAY + " (explicit tooltip_style — the packet layer leaves it alone)");
@@ -242,7 +241,13 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
             return;
         }
-        plugin.reloadFormatting();
+        try {
+            plugin.reloadFormatting();
+        } catch (RuntimeException ex) {
+            sender.sendMessage(ChatColor.RED + "Reload failed; the previous item catalog remains active: " + ex.getMessage());
+            plugin.getLogger().log(java.util.logging.Level.WARNING, "RoyalItems reload failed", ex);
+            return;
+        }
         sender.sendMessage(ChatColor.GREEN + "RoyalItems reloaded — " + service.all().size() + " formatted item(s).");
     }
 
@@ -312,6 +317,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             return filter(subs, args[0]);
         }
         if (args[0].equalsIgnoreCase("formatinv") && args.length == 2) {
+            if (!sender.hasPermission("royalitems.formatinv")) return List.of();
             List<String> names = new ArrayList<>();
             for (Player p : Bukkit.getOnlinePlayers()) {
                 names.add(p.getName());
@@ -319,6 +325,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             return filter(names, args[1]);
         }
         if (args[0].equalsIgnoreCase("give")) {
+            if (!sender.hasPermission("royalitems.give")) return List.of();
             if (args.length == 2) {
                 List<String> names = new ArrayList<>();
                 for (Player p : Bukkit.getOnlinePlayers()) {

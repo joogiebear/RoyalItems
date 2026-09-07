@@ -33,6 +33,8 @@ public final class RoyalItemsPlugin extends JavaPlugin {
     /** Opaque handle to the PacketEvents border listener (null if off/absent). Kept as Object so this
      *  class never references a PacketEvents type — see {@link #setupTooltipBorders()}. */
     private Object tooltipBorders;
+    private org.bukkit.scheduler.BukkitTask inventorySweep;
+    private final java.util.Set<java.util.UUID> borderAudience = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     @Override
     public void onEnable() {
@@ -60,20 +62,44 @@ public final class RoyalItemsPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (tooltipBorders != null) {
-            TooltipBorderListener.disable(tooltipBorders);
-            tooltipBorders = null;
+        stopRuntimeTasks();
+        getServer().getServicesManager().unregisterAll(this);
+    }
+
+    private void stopRuntimeTasks() {
+        if (inventorySweep != null) {
+            inventorySweep.cancel();
+            inventorySweep = null;
         }
+        if (tooltipBorders != null) {
+            try {
+                TooltipBorderListener.disable(tooltipBorders);
+            } catch (RuntimeException | LinkageError ex) {
+                getLogger().log(Level.WARNING, "Could not unregister PacketEvents borders", ex);
+            } finally {
+                tooltipBorders = null;
+            }
+        }
+        borderAudience.clear();
+    }
+
+    void updateBorderAudience(org.bukkit.entity.Player player) {
+        if (service.worldEnabled(player.getWorld())) borderAudience.add(player.getUniqueId());
+        else borderAudience.remove(player.getUniqueId());
+    }
+
+    void removeBorderAudience(org.bukkit.entity.Player player) {
+        borderAudience.remove(player.getUniqueId());
     }
 
     /**
      * Turn on the universal rarity tooltip borders. Reads the rarity→style map from config into plain
      * strings (no PacketEvents types here), then — only if the PacketEvents plugin is installed — hands
-     * off to {@link TooltipBorderListener#enable(Map)}. That class is the sole holder of PacketEvents
+     * off to the isolated PacketEvents listener. That class is the sole holder of PacketEvents
      * references, so a missing PacketEvents just skips this step instead of failing to load the plugin.
      */
     private void setupTooltipBorders() {
-        if (!getConfig().getBoolean("tooltip-borders.enabled", true)) {
+        if (!service.worldEnabled(null) || !getConfig().getBoolean("tooltip-borders.enabled", true)) {
             return;
         }
         Map<String, String> styles = new HashMap<>();
@@ -82,14 +108,19 @@ public final class RoyalItemsPlugin extends JavaPlugin {
             for (String key : section.getKeys(false)) {
                 String location = section.getString(key);
                 if (location != null && !location.isBlank()) {
-                    styles.put(key.trim().toUpperCase(Locale.ROOT), location.trim());
+                    try {
+                        net.kyori.adventure.key.Key.key(location.trim());
+                        styles.put(key.trim().toUpperCase(Locale.ROOT), location.trim());
+                    } catch (IllegalArgumentException ex) {
+                        getLogger().warning("Invalid tooltip border style for " + key + ": " + location);
+                    }
                 }
             }
         }
         if (styles.isEmpty()) {
             return;
         }
-        if (getServer().getPluginManager().getPlugin("packetevents") == null) {
+        if (!getServer().getPluginManager().isPluginEnabled("packetevents")) {
             getLogger().warning("tooltip-borders is enabled but PacketEvents is not installed — rarity "
                     + "borders will only appear on RoyalItems-dressed items. Install PacketEvents "
                     + "(https://modrinth.com/plugin/packetevents) to extend them to every item.");
@@ -100,7 +131,13 @@ public final class RoyalItemsPlugin extends JavaPlugin {
             context = java.util.List.of("TIER", "RARITY", "ROYAL");
         }
         boolean debug = getConfig().getBoolean("tooltip-borders.debug", false);
-        tooltipBorders = TooltipBorderListener.enable(styles, context, debug, getLogger());
+        for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) updateBorderAudience(player);
+        try {
+            tooltipBorders = TooltipBorderListener.enable(styles, context, debug, getLogger(), borderAudience::contains);
+        } catch (RuntimeException | LinkageError ex) {
+            getLogger().log(Level.WARNING, "PacketEvents borders unavailable; item formatting remains active", ex);
+            return;
+        }
         getLogger().info("Rarity tooltip borders enabled for " + styles.size()
                 + " rarities via PacketEvents (covers all items on the wire)."
                 + (debug ? " [debug on]" : ""));
@@ -127,11 +164,11 @@ public final class RoyalItemsPlugin extends JavaPlugin {
      */
     private void setupInventorySweep() {
         long seconds = getConfig().getLong("format-sweep-seconds", 0);
-        if (seconds <= 0) {
+        if (!service.worldEnabled(null) || seconds <= 0) {
             return;
         }
-        long ticks = seconds * 20L;
-        getServer().getScheduler().runTaskTimer(this, () -> {
+        long ticks = Math.min(seconds, Long.MAX_VALUE / 20) * 20L;
+        inventorySweep = getServer().getScheduler().runTaskTimer(this, () -> {
             for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
                 if (service.worldEnabled(player.getWorld())) {
                     service.formatInventory(player);
@@ -148,8 +185,28 @@ public final class RoyalItemsPlugin extends JavaPlugin {
 
     /** Re-read config.yml and every items/**.yml, and rebuild the item maps and templates. */
     public void reloadFormatting() {
+        // Bukkit's reloadConfig logs malformed YAML and substitutes defaults. Reject it first.
+        try {
+            new org.bukkit.configuration.file.YamlConfiguration().load(new File(getDataFolder(), "config.yml"));
+        } catch (IOException | org.bukkit.configuration.InvalidConfigurationException ex) {
+            throw new IllegalArgumentException("Cannot load config.yml: " + ex.getMessage(), ex);
+        }
+        String previousConfig = getConfig().saveToString();
         reloadConfig();
-        service.reload();
+        try {
+            service.reload();
+        } catch (RuntimeException ex) {
+            try {
+                getConfig().loadFromString(previousConfig);
+            } catch (org.bukkit.configuration.InvalidConfigurationException impossible) {
+                ex.addSuppressed(impossible);
+            }
+            throw ex;
+        }
+        stopRuntimeTasks();
+        setupTooltipBorders();
+        setupInventorySweep();
+        for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) player.updateInventory();
     }
 
     /**

@@ -5,11 +5,11 @@
 RoyalItems dresses ordinary Minecraft items (coal, a diamond sword, a raw cod) with the polished look
 players expect from a SkyBlock-style server — a coloured name, descriptive lore, a rarity tier, a
 rarity-coloured tooltip border — while **keeping the exact same `Material`**. A dressed diamond sword
-is still a fully-functional vanilla diamond sword: it enchants, repairs, and works in every recipe and
-shop exactly as before. The only things that change are what the player *sees* (lore and border) and
+keeps its vanilla material, damage, enchantments and other state. Material-based recipes and shops
+can accept dressed items; integrations using exact metadata matching need explicit support. The intended changes are what the player *sees* (lore and border) and
 what a plugin can *read* (a persistent-data identity).
 
-Built for **Paper 26.2 or newer**, Java 21. Lightweight, config-driven, and safe to run alongside
+Built against **Paper 26.2 build 121**, requiring Java 25. Config-driven, and designed to run alongside
 custom-item plugins like EcoItems — it never touches an item that already has an identity.
 
 ---
@@ -20,7 +20,7 @@ custom-item plugins like EcoItems — it never touches an item that already has 
 |---|---|---|---|
 | Has lore / rarity | ❌ | ✅ | ✅ |
 | Still the same Material | ✅ | ❌ (usually a re-skin) | ✅ |
-| Works in vanilla recipes/shops | ✅ | ⚠️ depends | ✅ |
+| Works in material-based recipes/shops | ✅ | ⚠️ depends | ✅; exact metadata matching needs integration |
 | Readable identity for other plugins | ❌ | ✅ | ✅ (PDC `item_id` / `fuel_id`) |
 
 **The one rule to understand:** *identity lives in the item's persistent data (PDC); lore is only
@@ -44,7 +44,9 @@ PDC instead.
   harvest, craft, smith, chest loot, furnace output, pickup, and whenever a container closes (which is
   when bought/traded items land). No polling; an optional sweep exists only as a backstop.
 - **Self-healing lore** — dressing stamps a definition hash into the item; when you edit a definition,
-  existing items refresh themselves through the same events, keeping enchants and damage intact.
+  existing items refresh through the same events, keeping enchants, damage and player-edited names/lore intact.
+- **Safe reloads** — malformed item YAML leaves the previous catalog active. Reload also restarts
+  tooltip listeners and inventory sweeps with the new settings.
 - **Rule engine safety net** — `rules.yml` catches anything the catalog missed (or a future Minecraft
   version added) so nothing ships bare.
 - **Developer API** — other plugins read a drop's identity through the Bukkit ServicesManager.
@@ -135,12 +137,24 @@ Every supported plain item dresses the moment it is created or acquired: **mined
 bought or withdrawn items land), and **on join** when `format-on-join` is on.
 
 An item that is already dressed is never re-formatted — but if the definition it was dressed with has
-changed since, the same events **refresh** it in place: name, lore, tags and border update; enchants,
-damage and everything else the player earned survive. Config edits therefore reach old items through
+changed since, the same events **refresh** it in place: plugin-owned name, lore, tags and border update;
+player-edited names/lore, enchants, damage and container contents survive. Removed identity tags are
+removed from old stacks too. Config edits therefore reach old items through
 normal play, with no sweep and no command.
 
 Items are never clobbered: anything with a custom name, lore, enchants, another plugin's persistent
-data, or state-as-identity meta (potions, books, heads, banners …) is left exactly as it is.
+data, a custom item name/model, or state-as-identity meta (potions, books, heads, banners …) is left as it is.
+First-time dressing copies the original stack, preserving shulker contents, tool damage, compass
+targets, charged projectiles and other metadata.
+
+### Upgrading from 0.1
+
+Older items lack the ownership stamps needed to distinguish default presentation from player edits.
+Their existing names, lore and borders are preserved during migration, while identity tags are
+reconciled. Subsequent definition changes update fields that match the adopted baseline. Older
+presentation that differs from that baseline remains untouched; no player rename is guessed away.
+The migration adds metadata, so old and newly generated stacks may need a formatting pass before
+they can stack. Existing decoration is not stripped when automatic formatting is disabled.
 
 ---
 
@@ -189,12 +203,18 @@ if (rsp != null) {
     String fuel = items.getFuelId(stack);   // "coal", or null
     ItemStack dressed = items.format("coal", 16);
     ItemStack maybe   = items.formatIfSupported(vanillaStack);
+    ItemStack inWorld = items.formatIfSupported(vanillaStack, player.getWorld());
 }
 ```
 
 **Soft dependency (no compile-time link):** read the PDC directly, or look up the service by class name
 via reflection — the identity keys are `NamespacedKey(royalitems, "item_id")`, `…"fuel_id"`, etc. Add
 `RoyalItems` to your `softdepend` so it loads first.
+
+Automatic formatting respects `enabled`. Pass the world to the overload above to also respect
+`disabled-worlds`; the original overload has no world context. `format(id, amount)` is an explicit
+administrative factory and remains available while automatic formatting is off. All formatting and
+reload APIs are for the server thread. The RoyalMinions companion change passes the recipient's world.
 
 Because a formatted item keeps its `Material`, a plugin that already matches by material (a minion fuel
 slot, a shop price, a recipe ingredient) accepts it **with no changes** — the PDC identity is there when
@@ -204,8 +224,8 @@ you want stricter matching.
 
 ## Compatibility
 
-- **Vanilla:** formatted items keep their `Material`, so recipes, enchanting, repair, trading, and
-  shops behave exactly as they did.
+- **Vanilla:** formatted items keep their `Material` and existing state. Verify any recipe, trade or
+  shop that compares full item metadata, and material-changing transformations, on your server.
 - **EcoItems / custom-item plugins:** RoyalItems never dresses an item that already has a name, lore,
   enchant, or another plugin's persistent data — so custom items on a shared base material are left
   untouched. The tooltip borders, meanwhile, cover eco gear too: they read each item's own rarity line
@@ -213,6 +233,14 @@ you want stricter matching.
 - **Stacking:** a formatted item does not stack with a plain vanilla one of the same kind (different
   data). For tools and armour this is irrelevant (they never stacked). For resources, RoyalItems
   formats at every entry point precisely so stacks stay whole.
+
+---
+
+## Build and validation
+
+Use JDK 25 and Maven: `mvn -B verify`. The tests cover formatting preservation, ownership refresh,
+legacy migration, settings, reload lifecycle and rarity detection using Bukkit doubles. They do not
+replace a staging-server test with your installed plugins and resource pack. See `UPGRADING.md`.
 
 ---
 
