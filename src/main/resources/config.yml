@@ -34,22 +34,19 @@ format-sweep-seconds: 0
 # ─────────────────────────────────────────────────────────────────────────────
 #  Rarity tooltip borders (universal)
 # ─────────────────────────────────────────────────────────────────────────────
-# Draws a coloured border around the WHOLE tooltip box of any item, matched to its
-# rarity — green for uncommon, purple for epic, gold for legendary, and so on. Unlike
-# the rarities.yml `tooltip-style` (which only reaches items RoyalItems itself dresses),
-# this covers EVERYTHING a player sees — eco gear, vanilla drops, bazaar purchases,
-# minion items — because it is applied on the outgoing packet, reading each item's own
-# rarity lore line. It never changes the stored item, so nothing else is affected.
-#
-# Requires the PacketEvents plugin (https://modrinth.com/plugin/packetevents). Without it
-# RoyalItems still runs; borders just fall back to RoyalItems-dressed items only.
-#
-# The border textures must be in the player's resource pack under the `royalitems:`
-# namespace (the RoyalItems tooltip pack ships all six). An item pointing at a style the
-# pack lacks shows the missing-texture checkerboard, so only map rarities you have sprites
-# for. An item that already carries its own tooltip_style is left untouched.
+# Names, lore and rarity text work without a resource pack.
+# Custom hover backgrounds need matching background/frame sprites in the ACTIVE client pack.
+# No tooltip textures are bundled with this plugin. Leave these off until you have supplied them.
+# The readiness flag is deliberately new: old configs with enabled: true safely fall back to
+# normal Minecraft tooltips until explicitly opted in. Already stored RoyalItems styles are
+# cleaned on the next formatting pass; foreign tooltip styles are preserved.
 tooltip-borders:
-  enabled: true
+  enabled: false
+  resource-pack-ready: false
+
+  # EcoItems manages its own presentation. Only opt in to cross-plugin packet borders deliberately.
+  # Requires PacketEvents; this does not add or replace EcoItems rarity lore.
+  include-custom-items: false
 
   # A rarity word is recognised when it is on its own lore line (e.g. `&5&lEPIC`) OR when it shares a
   # line with one of these context words — so EcoArmor's `Tier: Royal Legendary` is matched, while a

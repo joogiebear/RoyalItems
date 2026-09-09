@@ -1,4 +1,20 @@
-# RoyalItems 0.2.0
+# RoyalItems 2026.37.0
+
+This update fixes missing-texture hover backgrounds without requiring a resource pack. Existing
+configs are safe: the new `tooltip-borders.resource-pack-ready` flag defaults to false even when
+the old `enabled` flag is true. Names and rarity lore remain active with vanilla tooltip backgrounds.
+
+On join, pickup, container close or `/royalitems formatinv <player>`, RoyalItems removes its own
+previous tooltip styles. For legacy unstamped items, cleanup is limited to the six old defaults on
+RoyalItems-owned items. Foreign styles remain untouched. Formatting must be enabled in the world.
+
+EcoItems continues managing its own rarity and presentation. Cross-plugin borders are separately
+opted in via `tooltip-borders.include-custom-items`, which defaults to false.
+
+The jar is now `royalitems-2026.37.0.jar`, matching the suite's year.week.minor convention. Remove
+the previous RoyalItems jar before installing this replacement; do not leave both in plugins/.
+
+## Included improvements from 0.2.0
 
 Requires Java 25 and Paper 26.2 (built against build 121). Replace the jar and restart the server for
 the code upgrade. Subsequent configuration edits use `/royalitems reload`.

@@ -90,7 +90,9 @@ format-on-join: true       # dress a player's whole inventory when they join
 format-sweep-seconds: 0    # optional periodic backstop; 0 (off) is right for almost everyone
 
 tooltip-borders:           # the universal packet-level borders — see the file's comments
-  enabled: true
+  enabled: false
+  resource-pack-ready: false
+  include-custom-items: false
   context-keywords: [TIER, RARITY, ROYAL]
   styles:
     COMMON: royalitems:common
@@ -247,3 +249,20 @@ replace a staging-server test with your installed plugins and resource pack. See
 ## License
 
 © joogiebear. All rights reserved.
+
+## Normal tooltips by default (2026.37.0)
+
+Vanilla drops and minion output get names, lore and rarity text without a resource pack. Custom
+backgrounds are disabled unless both `tooltip-borders.enabled` and `tooltip-borders.resource-pack-ready`
+are explicitly true. The latter must only be enabled after supplying and loading matching sprites.
+No tooltip pack is bundled. Existing configurations without this new flag are safe by default.
+
+On the next join, pickup, container close or `formatinv`, previously stamped RoyalItems styles are
+removed while lore and names remain. Legacy unstamped styles are only removed for RoyalItems-owned
+items using one of the six old `royalitems:` defaults. Foreign styles and EcoItems lore are preserved.
+Automatic formatting must be enabled in that world for this cleanup to run.
+
+EcoItems uses its own rarity system. Cross-plugin packet borders additionally require
+`tooltip-borders.include-custom-items: true` and PacketEvents; this is off by default.
+
+Builds now use `year.week.minor`, including the embedded version and jar filename.
