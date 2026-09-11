@@ -1,0 +1,98 @@
+name: Weekly Release
+
+# Routine changes ship together on Sunday; game-breaking fixes may ship early.
+# Keep unapproved features off the default branch. Version format: YEAR.ISOWEEK.PATCH.
+# GitHub may delay cron execution; the scheduled time is not a wall-clock SLA.
+on:
+  schedule:
+    - cron: '0 10 * * 0'
+      timezone: America/Chicago
+  workflow_dispatch:
+    inputs:
+      emergency:
+        description: 'Game-breaking fix that cannot wait until Sunday'
+        type: boolean
+        default: false
+      reason:
+        description: 'Required for an emergency release; describe the game-breaking bug'
+        type: string
+        default: ''
+      force:
+        description: Release even when there are no new changes
+        type: boolean
+        default: false
+
+concurrency:
+  group: royalitems-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Enforce Sunday or emergency release policy
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EMERGENCY: ${{ inputs.emergency }}
+          RELEASE_REASON: ${{ inputs.reason }}
+        run: |
+          set -euo pipefail
+          # The native timezone-aware schedule is the authority, even if GitHub starts it late.
+          # Manual Sunday reruns are allowed; an early release requires an explicit emergency reason.
+          DAY=$(TZ=America/Chicago date +%u)
+          HOUR=$(TZ=America/Chicago date +%H)
+          if [[ "$EVENT_NAME" == schedule ]] || [[ "$DAY" == 7 && "$((10#$HOUR))" -ge 10 ]]; then
+            echo 'proceed=true' >> "$GITHUB_OUTPUT"
+          elif [[ "$EMERGENCY" == true && -n "${RELEASE_REASON//[[:space:]]/}" ]]; then
+            echo 'proceed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo '::error::Routine releases wait until Sunday at 10 a.m. Central. Early releases require emergency=true and a game-breaking bug reason.'
+            exit 1
+          fi
+
+      - name: Check out source and release tags
+        if: steps.gate.outputs.proceed == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Choose version and prepare notes
+        if: steps.gate.outputs.proceed == 'true'
+        id: prep
+        env:
+          FORCE_RELEASE: ${{ inputs.force }}
+        run: python3 .github/release/prepare.py
+
+      - name: Set up Java 25
+        if: steps.prep.outputs.release == 'true'
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      # Only the build workspace changes: no release commits or bot-authored source history.
+      - name: Set embedded version, test and package
+        if: steps.prep.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          mvn -B --no-transfer-progress org.codehaus.mojo:versions-maven-plugin:2.21.0:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+          mvn -B --no-transfer-progress clean verify
+          cp "target/royalitems-$VERSION.jar" "royalitems-$VERSION.jar"
+
+      - name: Publish release
+        if: steps.prep.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          gh release create "$VERSION" "royalitems-$VERSION.jar" \
+            --target "$GITHUB_SHA" --title "$VERSION" --notes-file RELEASE_NOTES.md --latest
