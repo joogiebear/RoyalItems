@@ -235,6 +235,38 @@ class FormattedItemServiceTest {
         verify(dressed, never()).getItemMeta();
     }
 
+    @Test void boundCompassKeepsVanillaNameButGetsLoreAndIdentity() throws Exception {
+        define(Material.COMPASS, "&aCompass", List.of("Tool"), Map.of());
+        StackState bound = new StackState(Material.COMPASS, org.bukkit.inventory.meta.CompassMeta.class);
+        bound.lodestone = true;
+        ItemStack dressed = service.formatIfSupported(bound.stack);
+        assertNull(dressed.getItemMeta().displayName());
+        assertEquals(1, dressed.getItemMeta().lore().size());
+        assertEquals("compass", service.getItemId(dressed));
+        assertSame(dressed, service.formatIfSupported(dressed));
+    }
+
+    @Test void compassBoundAfterDressingDropsOurName() throws Exception {
+        define(Material.COMPASS, "&aCompass", List.of("Tool"), Map.of());
+        ItemStack dressed = service.formatIfSupported(
+                new StackState(Material.COMPASS, org.bukkit.inventory.meta.CompassMeta.class).stack);
+        assertNotNull(dressed.getItemMeta().displayName());
+        states.get(dressed).lodestone = true;                    // player uses it on a lodestone
+        ItemStack refreshed = service.formatIfSupported(dressed);
+        assertNull(refreshed.getItemMeta().displayName());
+        assertEquals(1, refreshed.getItemMeta().lore().size());
+        assertSame(refreshed, service.formatIfSupported(refreshed));
+    }
+
+    @Test void playerNamedCompassKeepsItsNameWhenBound() throws Exception {
+        define(Material.COMPASS, "&aCompass", List.of("Tool"), Map.of());
+        ItemStack dressed = service.formatIfSupported(
+                new StackState(Material.COMPASS, org.bukkit.inventory.meta.CompassMeta.class).stack);
+        states.get(dressed).name = Component.text("Home");
+        states.get(dressed).lodestone = true;
+        assertEquals(Component.text("Home"), service.formatIfSupported(dressed).getItemMeta().displayName());
+    }
+
     @Test void legacyForeignStyleIsNotRemoved() throws Exception {
         define(Material.COAL, "Coal", List.of(), Map.of());
         StackState old = new StackState(Material.COAL, ItemMeta.class);
@@ -269,6 +301,7 @@ class FormattedItemServiceTest {
         List<Component> lore;
         NamespacedKey style;
         int damage;
+        boolean lodestone;
         int amount = 32;
 
         StackState(Material material, Class<? extends ItemMeta> metaClass) {
@@ -299,6 +332,10 @@ class FormattedItemServiceTest {
             doAnswer(i -> { tags.remove(i.getArgument(0)); return null; }).when(pdc).remove(any(NamespacedKey.class));
             if (meta instanceof BlockStateMeta block) when(block.getBlockState()).thenAnswer(i -> blockState);
             if (meta instanceof Damageable tool) when(tool.getDamage()).thenAnswer(i -> damage);
+            if (meta instanceof org.bukkit.inventory.meta.CompassMeta compass) {
+                when(compass.hasLodestone()).thenAnswer(i -> lodestone);
+                when(compass.isLodestoneTracked()).thenAnswer(i -> lodestone);
+            }
         }
 
         StackState copy() {
@@ -307,6 +344,7 @@ class FormattedItemServiceTest {
             copy.name = name;
             copy.lore = lore == null ? null : List.copyOf(lore);
             copy.damage = damage;
+            copy.lodestone = lodestone;
             copy.amount = amount;
             copy.style = style;
             copy.blockState = blockState;

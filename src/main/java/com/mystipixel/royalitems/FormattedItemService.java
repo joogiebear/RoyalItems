@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.AxolotlBucketMeta;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BundleMeta;
+import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -65,6 +66,8 @@ public final class FormattedItemService {
     private static final String NAME_STAMP = "_ri_name";
     private static final String LORE_STAMP = "_ri_lore";
     private static final String STYLE_STAMP = "_ri_style";
+    /** The name stamp of an item whose name we left unset. */
+    private static final String NO_NAME = fingerprint(null);
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
     private static final MiniMessage MINI = MiniMessage.miniMessage();
@@ -579,7 +582,7 @@ public final class FormattedItemService {
             return stack;
         }
         if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null
-                && !needsStyleCleanup(stack)) {
+                && !needsStyleCleanup(stack) && !hidesLodestoneName(stack)) {
             return stack;                        // dressed with the current definition — nothing to do
         }
         return dress(stack, def, false);
@@ -593,7 +596,8 @@ public final class FormattedItemService {
             return stack;
         }
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        Component name = def.displayName() == null ? null : text(def.displayName());
+        // A bound compass is named "Lodestone Compass" by vanilla; any name of ours would hide that.
+        Component name = def.displayName() == null || isLodestoneCompass(meta) ? null : text(def.displayName());
         List<Component> lines = new ArrayList<>();
         for (String line : def.lore()) {
             lines.add(text(line));
@@ -645,6 +649,21 @@ public final class FormattedItemService {
 
     private boolean owns(PersistentDataContainer pdc, String stamp, String value) {
         return value.equals(pdc.get(key(stamp), PersistentDataType.STRING));
+    }
+
+    private static boolean isLodestoneCompass(ItemMeta meta) {
+        // isLodestoneTracked stays true after the lodestone is broken; vanilla still names it then.
+        return meta instanceof CompassMeta compass && (compass.hasLodestone() || compass.isLodestoneTracked());
+    }
+
+    /**
+     * A compass we dressed and named, bound to a lodestone since: re-dress it so our name steps aside.
+     * The material and stamp checks come first, so no other item pays for the meta copy.
+     */
+    private boolean hidesLodestoneName(ItemStack stack) {
+        // By name: the unit tests' Material doubles are copies of the constants, never the constants.
+        return stack.getType().name().equals("COMPASS") && !NO_NAME.equals(readTag(stack, key(NAME_STAMP)))
+                && isLodestoneCompass(stack.getItemMeta());
     }
 
     /**
