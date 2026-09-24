@@ -104,7 +104,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 target.getWorld().dropItemNaturally(target.getLocation(), overflow);
             }
         }
-        sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + args[2].toLowerCase()
+        sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + args[2].toLowerCase(java.util.Locale.ROOT)
                 + " to " + target.getName() + ".");
     }
 
@@ -306,10 +306,10 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     }
 
     private static List<String> filter(List<String> options, String prefix) {
-        String p = prefix.toLowerCase();
+        String p = prefix.toLowerCase(java.util.Locale.ROOT);
         List<String> out = new ArrayList<>();
         for (String o : options) {
-            if (o.toLowerCase().startsWith(p)) {
+            if (o.toLowerCase(java.util.Locale.ROOT).startsWith(p)) {
                 out.add(o);
             }
         }
