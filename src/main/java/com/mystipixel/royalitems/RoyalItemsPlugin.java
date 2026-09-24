@@ -9,13 +9,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
-import org.bukkit.configuration.ConfigurationSection;
 
 /**
  * Dresses vanilla drops with lore and a persistent-data identity, keeping the same Material so a formatted
@@ -124,27 +121,11 @@ public final class RoyalItemsPlugin extends JavaPlugin {
      * references, so a missing PacketEvents just skips this step instead of failing to load the plugin.
      */
     private void setupTooltipBorders() {
-        if (!service.worldEnabled(null) || !getConfig().getBoolean("tooltip-borders.enabled", false)
-                || !getConfig().getBoolean("tooltip-borders.resource-pack-ready", false)
-                || !getConfig().getBoolean("tooltip-borders.include-custom-items", false)) {
+        if (!service.worldEnabled(null)) {
             return;
         }
-        Map<String, String> styles = new HashMap<>();
-        ConfigurationSection section = getConfig().getConfigurationSection("tooltip-borders.styles");
-        if (section != null) {
-            for (String key : section.getKeys(false)) {
-                String location = section.getString(key);
-                if (location != null && !location.isBlank()) {
-                    try {
-                        net.kyori.adventure.key.Key.key(location.trim());
-                        styles.put(key.trim().toUpperCase(Locale.ROOT), location.trim());
-                    } catch (IllegalArgumentException ex) {
-                        getLogger().warning("Invalid tooltip border style for " + key + ": " + location);
-                    }
-                }
-            }
-        }
-        if (styles.isEmpty()) {
+        BorderSettings settings = BorderSettings.read(getConfig(), getLogger());
+        if (!settings.active() || settings.styles().isEmpty()) {
             return;
         }
         if (!getServer().getPluginManager().isPluginEnabled("packetevents")) {
@@ -153,21 +134,17 @@ public final class RoyalItemsPlugin extends JavaPlugin {
                     + "(https://modrinth.com/plugin/packetevents) to extend them to every item.");
             return;
         }
-        java.util.List<String> context = getConfig().getStringList("tooltip-borders.context-keywords");
-        if (context.isEmpty()) {
-            context = java.util.List.of("TIER", "RARITY", "ROYAL");
-        }
-        boolean debug = getConfig().getBoolean("tooltip-borders.debug", false);
         for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) updateBorderAudience(player);
         try {
-            tooltipBorders = TooltipBorderListener.enable(styles, context, debug, getLogger(), borderAudience::contains);
+            tooltipBorders = TooltipBorderListener.enable(settings.styles(), List.copyOf(settings.context()),
+                    settings.debug(), getLogger(), borderAudience::contains);
         } catch (RuntimeException | LinkageError ex) {
             getLogger().log(Level.WARNING, "PacketEvents borders unavailable; item formatting remains active", ex);
             return;
         }
-        getLogger().info("Rarity tooltip borders enabled for " + styles.size()
+        getLogger().info("Rarity tooltip borders enabled for " + settings.styles().size()
                 + " rarities via PacketEvents (covers all items on the wire)."
-                + (debug ? " [debug on]" : ""));
+                + (settings.debug() ? " [debug on]" : ""));
     }
 
     /** Anonymous usage stats via bStats. Inert until the project id is set; disable in plugins/bStats. */

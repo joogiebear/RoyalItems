@@ -184,25 +184,11 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                     + ChatColor.GRAY + " (explicit tooltip_style — the packet layer leaves it alone)");
             return;
         }
-        var cfg = plugin.getConfig();
-        if (!cfg.getBoolean("tooltip-borders.enabled", false)
-                || !cfg.getBoolean("tooltip-borders.resource-pack-ready", false)
-                || !cfg.getBoolean("tooltip-borders.include-custom-items", false)) {
+        BorderSettings settings = BorderSettings.read(plugin.getConfig(), null);
+        if (!settings.active()) {
             sender.sendMessage(ChatColor.GRAY + "Border:   "
                     + ChatColor.YELLOW + "vanilla — custom packet borders are not opted in (rarity lore still works)");
             return;
-        }
-        var section = cfg.getConfigurationSection("tooltip-borders.styles");
-        java.util.Set<String> tokens = new java.util.HashSet<>();
-        if (section != null) {
-            for (String key : section.getKeys(false)) {
-                tokens.add(key.trim().toUpperCase(java.util.Locale.ROOT));
-            }
-        }
-        java.util.List<String> configured = cfg.getStringList("tooltip-borders.context-keywords");
-        java.util.Set<String> context = new java.util.HashSet<>();
-        for (String key : configured.isEmpty() ? java.util.List.of("TIER", "RARITY", "ROYAL") : configured) {
-            context.add(key.trim().toUpperCase(java.util.Locale.ROOT));
         }
 
         java.util.List<net.kyori.adventure.text.Component> lore =
@@ -217,25 +203,16 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         for (var line : lore) {
             lines.add(RarityDetect.sanitize(plain.serialize(line)));
         }
-        RarityDetect.Match match = RarityDetect.detect(lines, context, tokens);
+        RarityDetect.Match match = RarityDetect.detect(lines, settings.context(), settings.styles().keySet());
         if (match == null) {
             sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.YELLOW
                     + "none — no rarity token stands alone on a lore line or shares one with a"
                     + " context keyword");
             return;
         }
-        String style = null;
-        if (section != null) {
-            for (String key : section.getKeys(false)) {
-                if (key.equalsIgnoreCase(match.rarity())) {
-                    style = section.getString(key);
-                    break;
-                }
-            }
-        }
         sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE
                 + match.rarity().toLowerCase(java.util.Locale.ROOT)
-                + ChatColor.GRAY + " → " + ChatColor.WHITE + (style == null ? "?" : style)
+                + ChatColor.GRAY + " → " + ChatColor.WHITE + settings.styles().get(match.rarity())
                 + ChatColor.GRAY + " (matched '" + match.line() + "', "
                 + (match.standalone() ? "standalone line" : "context keyword") + ")");
         if (plugin.getServer().getPluginManager().getPlugin("packetevents") == null) {
