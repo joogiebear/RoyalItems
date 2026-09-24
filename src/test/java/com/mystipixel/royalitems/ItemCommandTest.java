@@ -51,6 +51,36 @@ class ItemCommandTest {
         return given;
     }
 
+    private List<String> inspect(String sub) {
+        FormattedItemService service = mock(FormattedItemService.class);
+        ItemStack held = mock(ItemStack.class);
+        org.bukkit.Material stone = spy(org.bukkit.Material.STONE);   // isAir() needs a server; stub it
+        doReturn(false).when(stone).isAir();
+        when(held.getType()).thenReturn(stone);
+        when(held.getItemMeta()).thenReturn(mock(org.bukkit.inventory.meta.ItemMeta.class));
+        when(service.getItemId(held)).thenReturn("coal");
+        when(service.getTag(held, "bonus")).thenReturn("5");
+        when(service.byId("coal")).thenReturn(new FormattedItemDefinition("coal", org.bukkit.Material.STONE,
+                "Coal", List.of(), java.util.Map.of("item_id", "coal", "bonus", "5"), null));
+        Player player = mock(Player.class);
+        PlayerInventory inventory = mock(PlayerInventory.class);
+        when(player.getInventory()).thenReturn(inventory);
+        when(inventory.getItemInMainHand()).thenReturn(held);
+        when(player.hasPermission(anyString())).thenReturn(true);
+        List<String> messages = new ArrayList<>();
+        doAnswer(i -> messages.add(i.getArgument(0))).when(player).sendMessage(anyString());
+        RoyalItemsPlugin plugin = mock(RoyalItemsPlugin.class);
+        when(plugin.getConfig()).thenReturn(new org.bukkit.configuration.file.YamlConfiguration());
+        new ItemCommand(plugin, service).onCommand(player, mock(Command.class), "royalitems", new String[]{sub});
+        return messages;
+    }
+
+    @Test void infoIsTheSameInspectionAndShowsExtraTags() {
+        List<String> inspected = inspect("inspect");
+        assertEquals(inspected, inspect("info"));
+        assertTrue(inspected.stream().anyMatch(line -> line.contains("bonus: ") && line.endsWith("5")), inspected::toString);
+    }
+
     @Test void unstackableItemsAreGivenOnePerStack() {
         assertEquals(List.of(1, 1, 1), give(1, "3"));
     }

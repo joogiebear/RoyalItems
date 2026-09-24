@@ -15,8 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code /royalitems give <player> <id> [amount]}, {@code reload}, and {@code info} (the held item's
- * identity). Each subcommand is permission-gated; tab completion only offers what the sender may run.
+ * {@code /royalitems give <player> <id> [amount]}, {@code reload}, {@code inspect} (everything known
+ * about the held item; {@code info} is its older name), {@code formatinv} and {@code export}. Each
+ * subcommand is permission-gated; tab completion only offers what the sender may run.
  */
 public final class ItemCommand implements CommandExecutor, TabCompleter {
 
@@ -35,7 +36,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "give" -> give(sender, args);
             case "reload" -> reload(sender);
-            case "info" -> info(sender);
+            case "info" -> inspect(sender);   // the older, shorter name for the same inspection
             case "formatinv" -> formatInv(sender, args);
             case "export" -> export(sender);
             case "inspect" -> inspect(sender);
@@ -153,6 +154,16 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ChatColor.GRAY + "item_id:  " + ChatColor.WHITE + id
                     + (fuel == null ? "" : ChatColor.GRAY + "   fuel_id: " + ChatColor.WHITE + fuel));
             FormattedItemDefinition def = service.byId(id);
+            if (def != null) {
+                for (Map.Entry<String, String> tag : def.tags().entrySet()) {
+                    if (!tag.getKey().equals(FormattedItemService.ITEM_ID)
+                            && !tag.getKey().equals(FormattedItemService.FUEL_ID)) {
+                        String value = service.getTag(held, tag.getKey());
+                        sender.sendMessage(ChatColor.GRAY + tag.getKey() + ": " + (value == null
+                                ? ChatColor.YELLOW + "(not on this item yet)" : ChatColor.WHITE + value));
+                    }
+                }
+            }
             String state;
             if (def == null) {
                 state = ChatColor.YELLOW + "dressed, but its definition no longer exists — left as-is";
@@ -169,8 +180,8 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         } else {
             String reason = service.skipReason(held);
             sender.sendMessage(ChatColor.GRAY + "State:    " + (reason == null
-                    ? ChatColor.GREEN + "plain and supported — dresses on the next pickup, container"
-                    + " close or craft"
+                    ? ChatColor.GREEN + "plain and supported — dresses as '"
+                    + service.byMaterial(held.getType()).id() + "' on the next pickup, container close or craft"
                     : ChatColor.YELLOW + "not dressed: " + reason));
         }
         inspectBorder(sender, held);
@@ -236,46 +247,6 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GREEN + "RoyalItems reloaded — " + service.all().size() + " formatted item(s).");
     }
 
-    private void info(CommandSender sender) {
-        if (!sender.hasPermission("royalitems.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
-            return;
-        }
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "Only a player can inspect a held item.");
-            return;
-        }
-        ItemStack held = player.getInventory().getItemInMainHand();
-        if (held == null || held.getType().isAir()) {
-            sender.sendMessage(ChatColor.GRAY + "Hold an item to inspect it.");
-            return;
-        }
-        sender.sendMessage(ChatColor.YELLOW + "Item: " + ChatColor.WHITE + held.getType());
-        String id = service.getItemId(held);
-        if (id == null) {
-            sender.sendMessage(ChatColor.GRAY + "Not a RoyalItems item (plain vanilla).");
-            FormattedItemDefinition def = service.byMaterial(held.getType());
-            if (def != null) {
-                sender.sendMessage(ChatColor.DARK_GRAY + "Its material would format as '" + def.id() + "' when dropped.");
-            }
-            return;
-        }
-        sender.sendMessage(ChatColor.GRAY + "item_id: " + ChatColor.WHITE + id);
-        String fuel = service.getFuelId(held);
-        if (fuel != null) {
-            sender.sendMessage(ChatColor.GRAY + "fuel_id: " + ChatColor.WHITE + fuel);
-        }
-        FormattedItemDefinition def = service.byId(id);
-        if (def != null) {
-            for (Map.Entry<String, String> tag : def.tags().entrySet()) {
-                if (tag.getKey().equals("item_id") || tag.getKey().equals("fuel_id")) {
-                    continue;
-                }
-                sender.sendMessage(ChatColor.GRAY + tag.getKey() + ": " + ChatColor.WHITE + tag.getValue());
-            }
-        }
-    }
-
     private void usage(CommandSender sender, String label) {
         sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv|export|inspect>");
     }
@@ -292,7 +263,6 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 subs.add("reload");
             }
             if (sender.hasPermission("royalitems.admin")) {
-                subs.add("info");
                 subs.add("export");
                 subs.add("inspect");
             }
