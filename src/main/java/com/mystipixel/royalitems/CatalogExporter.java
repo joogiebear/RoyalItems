@@ -17,7 +17,7 @@ import java.util.TreeMap;
 /**
  * Writes a comprehensive, clean catalog of every dressable vanilla item, grouped into by-type files
  * ({@code weapons}, {@code tools}, {@code armor}, {@code food}, {@code building}, {@code redstone},
- * {@code decoration}, {@code materials}, {@code misc}). Each entry is schema-v2 minimal — the key is the
+ * {@code decoration}, {@code materials}). Each entry is schema-v2 minimal — the key is the
  * {@code item_id} and material, {@code rarity} drives the border/name/footer and {@code category} is the
  * grey descriptor line; the name and lore auto-generate. Run with {@code /royalitems export}, review the
  * files under {@code catalog-export/}, then move the ones you want into {@code items/}.
@@ -175,10 +175,12 @@ final class CatalogExporter {
     }
 
     private static boolean isDecoration(String n) {
+        // Heads, skulls and banners never reach here: their vanilla state is their identity, so
+        // isDressable already excluded them.
         return n.endsWith("_BED") || n.endsWith("_CARPET") || n.endsWith("_CANDLE") || n.equals("CANDLE")
-                || n.endsWith("_BANNER") || n.equals("PAINTING") || n.equals("ITEM_FRAME")
-                || n.equals("GLOW_ITEM_FRAME") || n.equals("FLOWER_POT") || n.endsWith("_HEAD")
-                || n.endsWith("_SKULL") || n.equals("ARMOR_STAND") || n.equals("LANTERN")
+                || n.equals("PAINTING") || n.equals("ITEM_FRAME")
+                || n.equals("GLOW_ITEM_FRAME") || n.equals("FLOWER_POT")
+                || n.equals("ARMOR_STAND") || n.equals("LANTERN")
                 || n.equals("SOUL_LANTERN") || n.equals("TORCH") || n.equals("SOUL_TORCH")
                 || n.endsWith("_HANGING_SIGN") || n.endsWith("_SIGN") || n.endsWith("_POTTERY_SHERD")
                 || matches(n, "DANDELION", "POPPY", "BLUE_ORCHID", "ALLIUM", "AZURE_BLUET", "CORNFLOWER",
