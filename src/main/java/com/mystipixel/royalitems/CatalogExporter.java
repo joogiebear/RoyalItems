@@ -1,6 +1,8 @@
 package com.mystipixel.royalitems;
 
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,21 +27,33 @@ final class CatalogExporter {
     private CatalogExporter() {
     }
 
-    /**
-     * Ids that live in the hand-tuned {@code 0-overrides.yml} (fuel + bespoke prestige items). The export
-     * skips them so the generated catalog never fights those overrides with a duplicate id.
-     */
-    private static final Set<String> OVERRIDDEN = Set.of(
-            "coal", "golden_apple", "enchanted_golden_apple", "nether_star", "elytra", "totem_of_undying",
-            "heart_of_the_sea", "beacon", "conduit", "netherite_ingot", "ancient_debris", "dragon_egg",
-            "experience_bottle");
-
     /** One classified bucket for a material: which file it lands in, its descriptor, and its rarity. */
     private record Bucket(String file, String category, String rarity) {
     }
 
-    /** Classify every dressable material and write one YAML file per bucket into {@code dir}. Returns count. */
-    static int export(FormattedItemService service, File dir) throws IOException {
+    /**
+     * The ids the hand-tuned {@code 0-overrides.yml} defines (fuel + bespoke prestige items) — read from
+     * the live copy in the data folder, or the one bundled in the jar when there is none — so the export
+     * skips them and the generated catalog never fights an override with a duplicate id.
+     */
+    static Set<String> overriddenIds(File live, java.io.Reader bundled) {
+        YamlConfiguration yaml = live.isFile() ? YamlConfiguration.loadConfiguration(live)
+                : bundled != null ? YamlConfiguration.loadConfiguration(bundled) : new YamlConfiguration();
+        ConfigurationSection items = yaml.getConfigurationSection("formatted-items");
+        Set<String> ids = new java.util.HashSet<>();
+        if (items != null) {
+            for (String id : items.getKeys(false)) {
+                ids.add(id.toLowerCase(Locale.ROOT));
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Classify every dressable material not in {@code overridden} and write one YAML file per bucket
+     * into {@code dir}. Returns count.
+     */
+    static int export(FormattedItemService service, File dir, Set<String> overridden) throws IOException {
         Files.createDirectories(dir.toPath());
         Map<String, StringBuilder> files = new TreeMap<>();
         Map<String, Integer> counts = new TreeMap<>();
@@ -49,7 +63,7 @@ final class CatalogExporter {
                 continue;
             }
             String id = material.name().toLowerCase(Locale.ROOT);
-            if (OVERRIDDEN.contains(id)) {
+            if (overridden.contains(id)) {
                 continue;   // owned by 0-overrides.yml
             }
             Bucket bucket = classify(material);

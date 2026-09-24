@@ -114,8 +114,11 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             return;
         }
         java.io.File dir = new java.io.File(plugin.getDataFolder(), "catalog-export");
-        try {
-            int total = CatalogExporter.export(service, dir);
+        try (java.io.InputStream bundled = plugin.getResource("items/0-overrides.yml")) {
+            java.util.Set<String> overridden = CatalogExporter.overriddenIds(
+                    new java.io.File(plugin.getDataFolder(), "items/0-overrides.yml"),
+                    bundled == null ? null : new java.io.InputStreamReader(bundled, java.nio.charset.StandardCharsets.UTF_8));
+            int total = CatalogExporter.export(service, dir, overridden);
             sender.sendMessage(ChatColor.GREEN + "Exported " + total + " item(s) to "
                     + ChatColor.WHITE + "catalog-export/" + ChatColor.GREEN
                     + " — review, then move the files into items/.");
