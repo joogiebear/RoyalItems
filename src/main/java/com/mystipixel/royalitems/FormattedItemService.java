@@ -510,7 +510,8 @@ public final class FormattedItemService {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
         }
-        return stack.getItemMeta().getPersistentDataContainer().get(k, PersistentDataType.STRING);
+        // The read-only view reads the stored data in place; getItemMeta() would copy the whole meta.
+        return stack.getPersistentDataContainer().get(k, PersistentDataType.STRING);
     }
 
     /** Build {@code amount} of the formatted item with this id, or null if there is no such definition. */
@@ -573,7 +574,7 @@ public final class FormattedItemService {
             return stack;
         }
         if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null
-                && !needsStyleCleanup(stack.getItemMeta())) {
+                && !needsStyleCleanup(stack)) {
             return stack;                        // dressed with the current definition — nothing to do
         }
         return dress(stack, def, false);
@@ -639,6 +640,17 @@ public final class FormattedItemService {
 
     private boolean owns(PersistentDataContainer pdc, String stamp, String value) {
         return value.equals(pdc.get(key(stamp), PersistentDataType.STRING));
+    }
+
+    /**
+     * {@link #needsStyleCleanup(ItemMeta)} for the up-to-date check, which runs on every stack of every
+     * inventory pass. An empty style stamp means we last wrote "no style", so any style the item has now
+     * is someone else's and never ours to clean — the answer is known without copying the meta, and
+     * that is the default setup (custom tooltip styles off).
+     */
+    private boolean needsStyleCleanup(ItemStack stack) {
+        if (customTooltipStyles || "".equals(readTag(stack, key(STYLE_STAMP)))) return false;
+        return needsStyleCleanup(stack.getItemMeta());
     }
 
     private boolean needsStyleCleanup(ItemMeta meta) {

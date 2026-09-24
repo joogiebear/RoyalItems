@@ -225,6 +225,16 @@ class FormattedItemServiceTest {
         assertSame(healed, service.formatIfSupported(healed));
     }
 
+    @Test void upToDateItemIsCheckedWithoutCopyingItsMeta() throws Exception {
+        define(Material.COAL, "Coal", List.of("Common"), Map.of("fuel_id", "coal"));
+        ItemStack dressed = service.formatIfSupported(new StackState(Material.COAL, ItemMeta.class).stack);
+        states.get(dressed).style = new NamespacedKey("ecoitems", "custom");   // someone else's, added later
+        clearInvocations(dressed);
+        assertSame(dressed, service.formatIfSupported(dressed));
+        assertEquals("coal", service.getFuelId(dressed));
+        verify(dressed, never()).getItemMeta();
+    }
+
     @Test void legacyForeignStyleIsNotRemoved() throws Exception {
         define(Material.COAL, "Coal", List.of(), Map.of());
         StackState old = new StackState(Material.COAL, ItemMeta.class);
@@ -271,6 +281,7 @@ class FormattedItemServiceTest {
             doAnswer(i -> { amount = i.getArgument(0); return null; }).when(stack).setAmount(anyInt());
             when(stack.hasItemMeta()).thenReturn(true);
             when(stack.getItemMeta()).thenReturn(meta);
+            when(stack.getPersistentDataContainer()).thenReturn(pdc);
             when(stack.clone()).thenAnswer(i -> copy().stack);
             when(meta.getTooltipStyle()).thenAnswer(i -> style);
             doAnswer(i -> { style = i.getArgument(0); return null; }).when(meta).setTooltipStyle(nullable(NamespacedKey.class));
