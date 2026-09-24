@@ -9,8 +9,8 @@ description: Dresses vanilla drops with lore and a PDC identity (item_id / fuel_
 softdepend: [packetevents]
 commands:
   royalitems:
-    description: Give, reload, and inspect formatted items.
-    usage: /royalitems <give|reload|info>
+    description: Give, reload, inspect, and export formatted items.
+    usage: /royalitems <give|reload|inspect|formatinv|export>
     aliases: [ritems, rit]
 permissions:
   royalitems.admin:

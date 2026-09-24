@@ -251,7 +251,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     }
 
     private void usage(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|info|formatinv|export|inspect>");
+        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|inspect|formatinv|export>");
     }
 
     @Override
