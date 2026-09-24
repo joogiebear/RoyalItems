@@ -89,13 +89,19 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 // leave at 1
             }
         }
-        ItemStack item = service.format(args[2], amount);
+        ItemStack item = service.format(args[2], 1);
         if (item == null) {
             sender.sendMessage(ChatColor.RED + "No formatted item with id '" + args[2] + "'.");
             return;
         }
-        for (ItemStack overflow : target.getInventory().addItem(item).values()) {
-            target.getWorld().dropItemNaturally(target.getLocation(), overflow);
+        // Hand out stacks no bigger than the item allows, so 16 swords are 16 swords, not one stack of 16.
+        int perStack = Math.max(1, item.getMaxStackSize());
+        for (int left = amount; left > 0; left -= perStack) {
+            ItemStack stack = item.clone();
+            stack.setAmount(Math.min(left, perStack));
+            for (ItemStack overflow : target.getInventory().addItem(stack).values()) {
+                target.getWorld().dropItemNaturally(target.getLocation(), overflow);
+            }
         }
         sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + args[2].toLowerCase()
                 + " to " + target.getName() + ".");
