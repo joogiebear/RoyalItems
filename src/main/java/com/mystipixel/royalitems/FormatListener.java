@@ -149,7 +149,7 @@ public final class FormatListener implements Listener {
 
     @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
     public void onGameModeChange(org.bukkit.event.player.PlayerGameModeChangeEvent event) {
-        plugin.gameModeChanged(event.getPlayer(), event.getNewGameMode());
+        plugin.updateBorderAudience(event.getPlayer(), event.getNewGameMode());
     }
 
     @EventHandler

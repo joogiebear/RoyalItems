@@ -128,22 +128,36 @@ class RuntimeReloadTest {
 
     @Test void enteringCreativeResendsACleanInventory() throws Exception {
         doCallRealMethod().when(plugin).updateBorderAudience(any(), any());
-        doCallRealMethod().when(plugin).gameModeChanged(any(), any());
-        field("tooltipBorders", new Object());
         var player = player(org.bukkit.GameMode.SURVIVAL);
         plugin.updateBorderAudience(player, org.bukkit.GameMode.SURVIVAL);
+        field("tooltipBorders", new Object());
 
-        plugin.gameModeChanged(player, org.bukkit.GameMode.CREATIVE);
+        plugin.updateBorderAudience(player, org.bukkit.GameMode.CREATIVE);
         assertFalse(audience().contains(player.getUniqueId()));
         var resend = org.mockito.ArgumentCaptor.forClass(Runnable.class);
         verify(scheduler).runTask(eq(plugin), resend.capture());
         resend.getValue().run();
         verify(player).updateInventory();
 
-        plugin.gameModeChanged(player, org.bukkit.GameMode.ADVENTURE);   // borders come back
+        plugin.updateBorderAudience(player, org.bukkit.GameMode.ADVENTURE);   // borders come back
         assertTrue(audience().contains(player.getUniqueId()));
-        plugin.gameModeChanged(player, org.bukkit.GameMode.SURVIVAL);    // no change in audience, no resend
+        plugin.updateBorderAudience(player, org.bukkit.GameMode.SURVIVAL);    // no change in audience, no resend
         verify(scheduler, times(2)).runTask(eq(plugin), any(Runnable.class));
+    }
+
+    @Test void joiningPlayerIsResentTheirInventoryWithBorders() throws Exception {
+        doCallRealMethod().when(plugin).updateBorderAudience(any(), any());
+        field("tooltipBorders", new Object());
+        var player = player(org.bukkit.GameMode.SURVIVAL);
+        plugin.updateBorderAudience(player, org.bukkit.GameMode.SURVIVAL);
+        assertTrue(audience().contains(player.getUniqueId()));
+        verify(scheduler).runTask(eq(plugin), any(Runnable.class));
+    }
+
+    @Test void noResendWhileBordersAreOff() throws Exception {
+        doCallRealMethod().when(plugin).updateBorderAudience(any(), any());
+        plugin.updateBorderAudience(player(org.bukkit.GameMode.SURVIVAL), org.bukkit.GameMode.SURVIVAL);
+        verify(scheduler, never()).runTask(eq(plugin), any(Runnable.class));
     }
 
     @Test void reloadReplacesAndDisablesPacketListener() {
