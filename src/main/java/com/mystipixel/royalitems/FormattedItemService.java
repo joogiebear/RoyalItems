@@ -50,6 +50,10 @@ import java.util.logging.Logger;
  * ...); the name and lore are only what a player sees, never read for logic.
  *
  * <p>Other plugins get this via the Bukkit ServicesManager: {@code getServicesManager().load(FormattedItemService.class)}.
+ *
+ * <p>Threading: reading an item's identity ({@link #getItemId}, {@link #getFuelId}, {@link #getTag}) is
+ * safe from any thread. Everything that consults the catalog — formatting, {@link #byId}, {@link #all} —
+ * belongs on the main thread, where {@link #reload} replaces it.
  */
 public final class FormattedItemService {
 
@@ -77,7 +81,8 @@ public final class FormattedItemService {
     private final Map<String, FormattedItemDefinition> byId = new HashMap<>();
     private final Map<Material, FormattedItemDefinition> byMaterial = new EnumMap<>(Material.class);
     private final Map<String, ItemStack> templates = new HashMap<>();   // id -> prebuilt stack (amount 1)
-    private final Map<String, NamespacedKey> tagKeys = new HashMap<>(); // tag name -> cached key
+    // tag name -> cached key. Concurrent: getTag/getFuelId are public and may be called off-thread.
+    private final Map<String, NamespacedKey> tagKeys = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Rarity> rarities = new HashMap<>();       // rarity id -> tier
     private final List<FormattingRule> rules = new ArrayList<>();       // expanded over materials at load
 
