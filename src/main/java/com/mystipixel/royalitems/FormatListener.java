@@ -107,6 +107,12 @@ public final class FormatListener implements Listener {
         if (!(event.getEntity() instanceof Player player) || !service.worldEnabled(player.getWorld())) {
             return;
         }
+        // A partial pickup (inventory nearly full) is left alone. The server has already shrunk the
+        // ground stack to the amount that fits, and swapping in a new stack here skips its restore of
+        // the remainder — the rest of the stack would vanish. The next inventory close dresses it.
+        if (event.getRemaining() > 0) {
+            return;
+        }
         Item entity = event.getItem();
         ItemStack formatted = service.formatIfSupported(entity.getItemStack());
         if (formatted != entity.getItemStack()) {
