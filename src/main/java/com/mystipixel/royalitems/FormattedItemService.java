@@ -603,9 +603,13 @@ public final class FormattedItemService {
             lines.add(text(line));
         }
         List<Component> lore = lines.isEmpty() ? null : lines;
-        // Older items have no ownership stamps: preserve their presentation rather than guess
-        // whether a player renamed them. Adopt the desired baseline for subsequent refreshes.
-        if (fresh || owns(pdc, NAME_STAMP, fingerprint(meta.displayName()))) meta.displayName(name);
+        // A field is ours to rewrite when its stamp matches what we last wrote. Items from v0.1.0 have
+        // no stamps; their name is still recognisable, because we always write names with italics
+        // explicitly off and an anvil rename is plain unstyled text. Their lore is not — other
+        // plugins' lore looks the same as ours — so unstamped lore that differs is left alone, and so
+        // is every field a player or plugin changed after we last wrote it.
+        Component currentName = meta.displayName();
+        if (fresh || owns(pdc, NAME_STAMP, fingerprint(currentName)) || styledByUs(currentName)) meta.displayName(name);
         if (fresh || owns(pdc, LORE_STAMP, loreFingerprint(meta.lore()))) meta.lore(lore);
         pdc.set(key(NAME_STAMP), PersistentDataType.STRING, fingerprint(name));
         pdc.set(key(LORE_STAMP), PersistentDataType.STRING, loreFingerprint(lore));
@@ -645,6 +649,11 @@ public final class FormattedItemService {
         }
         updated.setItemMeta(meta);
         return updated;
+    }
+
+    /** True for a name written through {@link #text}, which always sets italics explicitly off. */
+    private static boolean styledByUs(Component name) {
+        return name != null && name.decoration(TextDecoration.ITALIC) == TextDecoration.State.FALSE;
     }
 
     private boolean owns(PersistentDataContainer pdc, String stamp, String value) {

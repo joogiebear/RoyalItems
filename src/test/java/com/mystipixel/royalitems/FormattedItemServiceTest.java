@@ -144,6 +144,27 @@ class FormattedItemServiceTest {
         assertSame(migrated, service.formatIfSupported(migrated));
     }
 
+    @Test void legacyNameWeWroteIsAdoptedButLegacyLoreIsNot() throws Exception {
+        var def = define(Material.COAL, "&fNew coal", List.of("New"), Map.of());
+        StackState old = new StackState(Material.COAL, ItemMeta.class);
+        old.name = Component.text("Coal").decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false);
+        old.lore = List.of(Component.text("Old").decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        old.tags.put(new NamespacedKey("royalitems", "item_id"), "coal");
+        old.tags.put(new NamespacedKey("royalitems", "def_hash"), "v0.1-hash");
+        ItemStack migrated = service.formatIfSupported(old.stack);
+        assertNotEquals(old.name, migrated.getItemMeta().displayName());
+        assertEquals(old.lore, migrated.getItemMeta().lore());
+        assertEquals(def.hash(), service.getTag(migrated, "def_hash"));
+    }
+
+    @Test void anvilRenameOfADressedItemSurvivesRefresh() throws Exception {
+        define(Material.COAL, "Coal", List.of("Old"), Map.of());
+        ItemStack dressed = service.formatIfSupported(new StackState(Material.COAL, ItemMeta.class).stack);
+        states.get(dressed).name = Component.text("Lucky coal");   // anvil: plain literal, no styling
+        define(Material.COAL, "New coal", List.of("New"), Map.of());
+        assertEquals(Component.text("Lucky coal"), service.formatIfSupported(dressed).getItemMeta().displayName());
+    }
+
     @Test void foreignItemIsUntouched() throws Exception {
         define(Material.COAL, "Coal", List.of(), Map.of());
         StackState custom = new StackState(Material.COAL, ItemMeta.class);
