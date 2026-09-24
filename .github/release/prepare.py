@@ -12,7 +12,8 @@ def git(*args):
 
 
 def next_version(tags, today):
-    prefix = f"{today.year}.{today.isocalendar().week}."
+    iso = today.isocalendar()   # its year, not the calendar year: 1 Jan 2027 is 2026.53
+    prefix = f"{iso.year}.{iso.week}."
     patches = [int(tag[len(prefix):]) for tag in tags
                if re.fullmatch(re.escape(prefix) + r"\d+", tag)]
     return prefix + str(max(patches, default=-1) + 1)
