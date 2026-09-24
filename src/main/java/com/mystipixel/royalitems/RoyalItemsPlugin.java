@@ -41,7 +41,11 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         saveDefaultConfig();
         copyDefaultItems();
         service = new FormattedItemService(this);
-        service.reload();
+        int skipped = service.reloadSkippingInvalid();
+        if (skipped > 0) {
+            getLogger().warning(skipped + " broken catalog entr" + (skipped == 1 ? "y was" : "ies were")
+                    + " skipped (see above). /royalitems reload refuses to load until they are fixed.");
+        }
 
         getServer().getServicesManager().register(FormattedItemService.class, service, this, ServicePriority.Normal);
         getServer().getPluginManager().registerEvents(new FormatListener(this, service), this);

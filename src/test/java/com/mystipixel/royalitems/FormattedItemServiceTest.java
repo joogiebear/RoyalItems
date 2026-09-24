@@ -174,6 +174,18 @@ class FormattedItemServiceTest {
         assertSame(original, service.byMaterial(Material.COAL));
     }
 
+    @Test void startupLoadSkipsBrokenPiecesThatReloadRejects() throws Exception {
+        Files.createDirectories(directory.resolve("items"));
+        Files.writeString(directory.resolve("items/broken.yml"), "formatted-items: [broken");
+        Files.writeString(directory.resolve("items/stale.yml"),
+                "formatted-items:\n  grass:\n    material: NOT_A_REAL_ITEM\n");
+        Files.writeString(directory.resolve("rules.yml"),
+                "rules:\n  bad:\n    match: ['*']\n    tags:\n      Bad Tag: x\n");
+        assertEquals(3, service.reloadSkippingInvalid());
+        assertTrue(service.all().isEmpty());
+        assertThrows(IllegalArgumentException.class, service::reload);
+    }
+
     @Test void definitionsCannotBeChangedThroughApiCollections() throws Exception {
         var def = define(Material.COAL, "Coal", List.of("Common"), Map.of());
         assertThrows(UnsupportedOperationException.class, () -> service.all().clear());

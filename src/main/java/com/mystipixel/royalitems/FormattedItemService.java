@@ -81,6 +81,11 @@ public final class FormattedItemService {
     private final Map<String, Rarity> rarities = new HashMap<>();       // rarity id -> tier
     private final List<FormattingRule> rules = new ArrayList<>();       // expanded over materials at load
 
+    // Per-load state, only ever set on the throwaway instance that reload() builds.
+    private boolean lenient;                                             // skip broken entries instead of failing
+    private int skipped;
+    private final Set<String> unknownRarities = new java.util.TreeSet<>();
+
     public FormattedItemService(Plugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
@@ -96,8 +101,23 @@ public final class FormattedItemService {
      * material wins over any later one. So runtime is only ever a map lookup; the expansion is one-time.
      */
     public void reload() {
+        reload(false);
+    }
+
+    /**
+     * The startup load: a broken entry, rule or file is logged and skipped rather than failing the
+     * whole catalog. At startup there is no live catalog to protect, and one stale material (a
+     * Minecraft update renaming an item in an old data-folder catalog) must not stop the plugin — and
+     * the service RoyalMinions depends on — from enabling. Returns how many pieces were skipped.
+     */
+    public int reloadSkippingInvalid() {
+        return reload(true);
+    }
+
+    private int reload(boolean lenient) {
         // Build away from the published service. A broken file must not erase the live catalog.
         FormattedItemService next = new FormattedItemService(plugin);
+        next.lenient = lenient;
         next.load();
         byId.clear(); byId.putAll(next.byId);
         byMaterial.clear(); byMaterial.putAll(next.byMaterial);
@@ -108,6 +128,7 @@ public final class FormattedItemService {
         globalEnabled = next.globalEnabled;
         customTooltipStyles = next.customTooltipStyles;
         formatOnJoin = next.formatOnJoin;
+        return next.skipped;
     }
 
     private void load() {
@@ -129,23 +150,61 @@ public final class FormattedItemService {
         loadRarities(plugin.getConfig().getConfigurationSection("rarities"));
         loadRarities(fileSection("rarities.yml", "rarities"));
 
-        loadSection(plugin.getConfig().getConfigurationSection("formatted-items"));
+        loadSection(plugin.getConfig().getConfigurationSection("formatted-items"), "config.yml");
         for (File file : yamlFiles(new File(plugin.getDataFolder(), "items"))) {
-            loadSection(readYaml(file).getConfigurationSection("formatted-items"));
+            YamlConfiguration yaml = readYamlOrSkip(file);
+            if (yaml != null) {
+                loadSection(yaml.getConfigurationSection("formatted-items"), "items/" + file.getName());
+            }
         }
         int explicit = byId.size();
 
-        loadRules(plugin.getConfig().getConfigurationSection("rules"));
-        loadRules(fileSection("rules.yml", "rules"));
+        loadRules(plugin.getConfig().getConfigurationSection("rules"), "config.yml");
+        loadRules(fileSection("rules.yml", "rules"), "rules.yml");
         int expanded = expandRules();
 
         logger.info("Loaded " + byId.size() + " item(s): " + explicit + " defined, " + expanded
                 + " from " + rules.size() + " rule(s), " + rarities.size() + " rarities.");
+        if (!unknownRarities.isEmpty()) {
+            logger.warning("Unknown rarity " + unknownRarities + " — those items are shown as common. "
+                    + "Fix the spelling or define it in rarities.yml.");
+        }
+    }
+
+    /** A strict load rethrows; a lenient (startup) load logs the broken piece and carries on without it. */
+    private void skipOrThrow(RuntimeException ex, String what) {
+        if (!lenient) {
+            throw ex;
+        }
+        skipped++;
+        logger.warning("Skipping " + what + ": " + ex.getMessage());
+    }
+
+    private YamlConfiguration readYamlOrSkip(File file) {
+        try {
+            return readYaml(file);
+        } catch (IllegalArgumentException ex) {
+            skipOrThrow(ex, file.getName());
+            return null;
+        }
     }
 
     private ConfigurationSection fileSection(String fileName, String key) {
         File file = new File(plugin.getDataFolder(), fileName);
-        return file.isFile() ? readYaml(file).getConfigurationSection(key) : null;
+        YamlConfiguration yaml = file.isFile() ? readYamlOrSkip(file) : null;
+        return yaml == null ? null : yaml.getConfigurationSection(key);
+    }
+
+    /** The rarity with this id, or common — noting the id so the load can warn about the typo once. */
+    private Rarity rarity(String id) {
+        Rarity rarity = rarities.get(id);
+        if (rarity != null) {
+            return rarity;
+        }
+        if (!id.equals(Rarity.DEFAULT.id())) {
+            unknownRarities.add(id);
+        }
+        return Rarity.DEFAULT;
     }
 
     private static YamlConfiguration readYaml(File file) {
@@ -168,24 +227,41 @@ public final class FormattedItemService {
                 continue;
             }
             String key = id.toLowerCase(Locale.ROOT);
+            String style = r.getString("tooltip-style", null);
+            if (customTooltipStyles && style != null && !style.isBlank()) {
+                try {
+                    Key.key(style);
+                } catch (RuntimeException ex) {
+                    skipOrThrow(ex, "rarity '" + id + "'");
+                    continue;
+                }
+            }
             rarities.putIfAbsent(key, new Rarity(key, r.getString("display", "&f&l" + id.toUpperCase(Locale.ROOT)),
-                    r.getString("color", "&f"), r.getString("tooltip-style", null)));
+                    r.getString("color", "&f"), style));
         }
     }
 
-    private void loadRules(ConfigurationSection sec) {
+    private void loadRules(ConfigurationSection sec, String source) {
         if (sec == null) {
             return;
         }
         for (String id : sec.getKeys(false)) {
             ConfigurationSection r = sec.getConfigurationSection(id);
-            if (r != null) {
-                rules.add(FormattingRule.parse(r));
+            if (r == null) {
+                continue;
+            }
+            try {
+                FormattingRule rule = FormattingRule.parse(r);
+                // Validated here, once, so a bad tag drops the whole rule rather than failing mid-expansion.
+                rule.extraTags().keySet().forEach(this::validateTag);
+                rules.add(rule);
+            } catch (RuntimeException ex) {
+                skipOrThrow(ex, "rule '" + id + "' in " + source);
             }
         }
     }
 
-    private void loadSection(ConfigurationSection items) {
+    private void loadSection(ConfigurationSection items, String source) {
         if (items == null) {
             return;
         }
@@ -194,7 +270,13 @@ public final class FormattedItemService {
             if (sec == null) {
                 continue;
             }
-            FormattedItemDefinition def = parse(id.toLowerCase(Locale.ROOT), sec);
+            FormattedItemDefinition def;
+            try {
+                def = parse(id.toLowerCase(Locale.ROOT), sec);
+            } catch (RuntimeException ex) {
+                skipOrThrow(ex, "item '" + id + "' in " + source);
+                continue;
+            }
             if (def != null) {
                 register(def);
             }
@@ -203,6 +285,9 @@ public final class FormattedItemService {
 
     /** Expand every rule over all real items, dressing each material the first matching rule claims. */
     private int expandRules() {
+        if (rules.isEmpty()) {
+            return 0;
+        }
         int count = 0;
         for (Material material : Material.values()) {
             if (!isDressable(material) || byMaterial.containsKey(material)) {
@@ -219,7 +304,7 @@ public final class FormattedItemService {
     }
 
     private FormattedItemDefinition expand(FormattingRule rule, Material material) {
-        Rarity rarity = rarities.getOrDefault(rule.rarityFor(material), Rarity.DEFAULT);
+        Rarity rarity = rarity(rule.rarityFor(material));
         String[] parts = material.name().split("_");
         Map<String, String> ph = new HashMap<>();
         ph.put("name", title(material.name()));
@@ -239,7 +324,6 @@ public final class FormattedItemService {
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put("item_id", id);
         for (Map.Entry<String, String> e : rule.extraTags().entrySet()) {
-            validateTag(e.getKey());
             tags.put(e.getKey(), apply(e.getValue(), ph));
         }
         return new FormattedItemDefinition(id, material, apply(rule.nameTemplate(), ph), lore, tags,
@@ -337,8 +421,7 @@ public final class FormattedItemService {
             throw new IllegalArgumentException("Formatted item '" + id + "' has invalid item material '" + materialName + "'");
         }
 
-        Rarity rarity = rarities.getOrDefault(sec.getString("rarity", "common").toLowerCase(Locale.ROOT),
-                Rarity.DEFAULT);
+        Rarity rarity = rarity(sec.getString("rarity", "common").toLowerCase(Locale.ROOT));
         String category = sec.getString("category", "Collection Item");
 
         String name = sec.getString("name", sec.getString("display-name", null));
