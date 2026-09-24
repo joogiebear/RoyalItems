@@ -16,7 +16,7 @@ the previous RoyalItems jar before installing this replacement; do not leave bot
 
 ## Included improvements from 0.2.0
 
-Requires Java 25 and Paper 26.2 (built against build 121). Replace the jar and restart the server for
+Requires Java 25 and Paper 26.2 (built against build 123). Replace the jar and restart the server for
 the code upgrade. Subsequent configuration edits use `/royalitems reload`.
 
 ## Changes

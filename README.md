@@ -9,7 +9,7 @@ keeps its vanilla material, damage, enchantments and other state. Material-based
 can accept dressed items; integrations using exact metadata matching need explicit support. The intended changes are what the player *sees* (lore and border) and
 what a plugin can *read* (a persistent-data identity).
 
-Built against **Paper 26.2 build 121**, requiring Java 25. Config-driven, and designed to run alongside
+Built against **Paper 26.2 build 123**, requiring Java 25. Config-driven, and designed to run alongside
 custom-item plugins like EcoItems — it never touches an item that already has an identity.
 
 ---
