@@ -88,8 +88,35 @@ public final class RoyalItemsPlugin extends JavaPlugin {
     }
 
     void updateBorderAudience(org.bukkit.entity.Player player) {
-        if (service.worldEnabled(player.getWorld())) borderAudience.add(player.getUniqueId());
-        else borderAudience.remove(player.getUniqueId());
+        updateBorderAudience(player, player.getGameMode());
+    }
+
+    /**
+     * Creative players are never shown packet borders: a creative client sends whole item stacks back
+     * to the server, so a border stamped on the wire would be saved into the real item and outlive the
+     * feature (or the resource pack). Items RoyalItems dressed keep their stored style regardless.
+     */
+    void updateBorderAudience(org.bukkit.entity.Player player, org.bukkit.GameMode mode) {
+        if (mode != org.bukkit.GameMode.CREATIVE && service.worldEnabled(player.getWorld())) {
+            borderAudience.add(player.getUniqueId());
+        } else {
+            borderAudience.remove(player.getUniqueId());
+        }
+    }
+
+    /**
+     * A player changing game mode. Entering creative, the client still holds the bordered copies it
+     * was sent in survival, so the inventory is re-sent (a tick later, once the new mode applies) from
+     * outside the audience — clean copies the client can safely echo back.
+     */
+    void gameModeChanged(org.bukkit.entity.Player player, org.bukkit.GameMode mode) {
+        boolean wasShown = borderAudience.contains(player.getUniqueId());
+        updateBorderAudience(player, mode);
+        if (tooltipBorders != null && wasShown != borderAudience.contains(player.getUniqueId())) {
+            getServer().getScheduler().runTask(this, () -> {
+                if (player.isOnline()) player.updateInventory();
+            });
+        }
     }
 
     void removeBorderAudience(org.bukkit.entity.Player player) {

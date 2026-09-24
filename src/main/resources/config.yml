@@ -46,6 +46,8 @@ tooltip-borders:
 
   # EcoItems manages its own presentation. Only opt in to cross-plugin packet borders deliberately.
   # Requires PacketEvents; this does not add or replace EcoItems rarity lore.
+  # Players in creative mode never see these packet borders: a creative client sends whole items
+  # back to the server, which would save the border into the real item. RoyalItems' own items keep theirs.
   include-custom-items: false
 
   # A rarity word is recognised when it is on its own lore line (e.g. `&5&lEPIC`) OR when it shares a

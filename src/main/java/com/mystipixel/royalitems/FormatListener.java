@@ -147,6 +147,11 @@ public final class FormatListener implements Listener {
         plugin.updateBorderAudience(event.getPlayer());
     }
 
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameModeChange(org.bukkit.event.player.PlayerGameModeChangeEvent event) {
+        plugin.gameModeChanged(event.getPlayer(), event.getNewGameMode());
+    }
+
     @EventHandler
     public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         plugin.removeBorderAudience(event.getPlayer());

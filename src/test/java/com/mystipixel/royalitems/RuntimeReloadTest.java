@@ -99,6 +99,53 @@ class RuntimeReloadTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private java.util.Set<java.util.UUID> audience() throws Exception {
+        var field = RoyalItemsPlugin.class.getDeclaredField("borderAudience");
+        field.setAccessible(true);
+        return (java.util.Set<java.util.UUID>) field.get(plugin);
+    }
+
+    private org.bukkit.entity.Player player(org.bukkit.GameMode mode) {
+        org.bukkit.entity.Player player = mock(org.bukkit.entity.Player.class);
+        when(player.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
+        when(player.getGameMode()).thenReturn(mode);
+        when(player.isOnline()).thenReturn(true);
+        when(service.worldEnabled(any())).thenReturn(true);
+        return player;
+    }
+
+    @Test void creativePlayersAreNeverShownPacketBorders() throws Exception {
+        doCallRealMethod().when(plugin).updateBorderAudience(any());
+        doCallRealMethod().when(plugin).updateBorderAudience(any(), any());
+        var creative = player(org.bukkit.GameMode.CREATIVE);
+        var survival = player(org.bukkit.GameMode.SURVIVAL);
+        plugin.updateBorderAudience(creative);
+        plugin.updateBorderAudience(survival);
+        assertFalse(audience().contains(creative.getUniqueId()));
+        assertTrue(audience().contains(survival.getUniqueId()));
+    }
+
+    @Test void enteringCreativeResendsACleanInventory() throws Exception {
+        doCallRealMethod().when(plugin).updateBorderAudience(any(), any());
+        doCallRealMethod().when(plugin).gameModeChanged(any(), any());
+        field("tooltipBorders", new Object());
+        var player = player(org.bukkit.GameMode.SURVIVAL);
+        plugin.updateBorderAudience(player, org.bukkit.GameMode.SURVIVAL);
+
+        plugin.gameModeChanged(player, org.bukkit.GameMode.CREATIVE);
+        assertFalse(audience().contains(player.getUniqueId()));
+        var resend = org.mockito.ArgumentCaptor.forClass(Runnable.class);
+        verify(scheduler).runTask(eq(plugin), resend.capture());
+        resend.getValue().run();
+        verify(player).updateInventory();
+
+        plugin.gameModeChanged(player, org.bukkit.GameMode.ADVENTURE);   // borders come back
+        assertTrue(audience().contains(player.getUniqueId()));
+        plugin.gameModeChanged(player, org.bukkit.GameMode.SURVIVAL);    // no change in audience, no resend
+        verify(scheduler, times(2)).runTask(eq(plugin), any(Runnable.class));
+    }
+
     @Test void reloadReplacesAndDisablesPacketListener() {
         config.set("tooltip-borders.resource-pack-ready", true);
         config.set("tooltip-borders.include-custom-items", true);
