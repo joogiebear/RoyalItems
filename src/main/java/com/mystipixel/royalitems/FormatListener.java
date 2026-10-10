@@ -19,15 +19,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-/**
- * Dresses a supported item the instant it is created or acquired — mined, killed, harvested, crafted,
- * smithed, looted, taken from a furnace, picked up, or (via {@link #onInventoryClose}) bought, traded or
- * withdrawn from any GUI. There is no per-source opt-in: if the material is supported and the item is
- * still plain, it is dressed. This event coverage replaces the old polling sweep — the closing of a
- * container is exactly when a bought/traded item arrives, so no timer is needed. The service leaves any
- * item that already carries a name, lore, enchant, or another plugin's data untouched; disabled worlds
- * are skipped.
- */
+// Dresses supported plain items when they are created or acquired. Closing any container covers items
+// bought, traded or withdrawn from a GUI.
 public final class FormatListener implements Listener {
 
     private final RoyalItemsPlugin plugin;
@@ -86,7 +79,6 @@ public final class FormatListener implements Listener {
         }
     }
 
-    /** Dress the smelted item as it is taken from a furnace / blast furnace / smoker output slot. */
     @EventHandler(ignoreCancelled = true)
     public void onFurnaceTake(InventoryClickEvent event) {
         if (event.getSlotType() != InventoryType.SlotType.RESULT) {
@@ -101,15 +93,13 @@ public final class FormatListener implements Listener {
         }
     }
 
-    /** Dress an item the instant a player picks it up off the ground (traded, tossed, or otherwise). */
     @EventHandler(ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player player) || !service.worldEnabled(player.getWorld())) {
             return;
         }
-        // A partial pickup (inventory nearly full) is left alone. The server has already shrunk the
-        // ground stack to the amount that fits, and swapping in a new stack here skips its restore of
-        // the remainder — the rest of the stack would vanish. The next inventory close dresses it.
+        // Skip partial pickups: swapping the stack here skips the server's restore of the remainder and
+        // the rest of the stack vanishes. The next inventory close dresses it.
         if (event.getRemaining() > 0) {
             return;
         }
@@ -120,12 +110,7 @@ public final class FormatListener implements Listener {
         }
     }
 
-    /**
-     * Dress a player's inventory when they close any container — a bazaar, a trade, a chest, or their own
-     * inventory. This is the moment a bought, traded or withdrawn item lands, so it is the catch-all that
-     * the polling sweep used to be. The pass is scheduled one tick later so the closing transaction has
-     * fully settled before the inventory is written.
-     */
+    // next tick, so the closing transaction has settled before the inventory is written
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player) || !service.worldEnabled(player.getWorld())) {

@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One entry: a vanilla {@link Material} plus the visual dressing (name, lore) and the identity tags to
- * stamp into a formatted copy of it. The identity is the {@code tags} — always at least {@code item_id} —
- * written to the item's persistent data; the name and lore are only what a player sees. Supported items
- * always format, no matter how they are obtained; there is no per-source opt-in.
+ * A vanilla {@link Material} plus its display name, lore and identity tags. The tags (always including
+ * {@code item_id}) are the identity; name and lore are display only.
  */
 public final class FormattedItemDefinition {
 
@@ -54,18 +52,14 @@ public final class FormattedItemDefinition {
         return tags.get(key);
     }
 
-    /** The custom tooltip-border style (a resource location like {@code royalitems:rare}), or null. */
+    /** Resource location like {@code royalitems:rare}, or null. */
     public String tooltipStyle() {
         return tooltipStyle;
     }
 
     private String hash;
 
-    /**
-     * Content stamp over every field this definition owns, as a short hex string. Dressing writes it
-     * into the item's persistent data; the event paths compare it against the current definition and
-     * re-dress on mismatch — which is how a config edit reaches items dropped before it was made.
-     */
+    /** Hex stamp over every owned field; stored on dressed items so a config edit re-dresses old ones. */
     public String hash() {
         if (hash == null) {
             StringBuilder sb = new StringBuilder(id).append('\0').append(material.name()).append('\0')

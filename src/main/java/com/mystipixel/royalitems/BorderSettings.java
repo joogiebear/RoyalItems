@@ -11,20 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-/**
- * The {@code tooltip-borders} config, read in one place so the packet borders a player sees and the
- * explanation {@code /royalitems inspect} gives can never disagree about which rarities have a border.
- *
- * @param active   all three opt-ins are on: enabled, resource-pack-ready and include-custom-items
- * @param styles   UPPER-CASE rarity token -> valid {@code namespace:id} border location
- * @param context  UPPER-CASE words that qualify a rarity sharing a lore line with other text
- * @param debug    log the detector's verdicts
- */
+// Shared by the packet borders and /royalitems inspect so they can't disagree.
+// active: enabled, resource-pack-ready and include-custom-items are all on. Map/set keys are UPPER-CASE.
 record BorderSettings(boolean active, Map<String, String> styles, Set<String> context, boolean debug) {
 
     static final List<String> DEFAULT_CONTEXT = List.of("TIER", "RARITY", "ROYAL");
 
-    /** Read from the plugin config. {@code log} receives a warning per invalid style, or is null to stay quiet. */
+    // log may be null to skip invalid-style warnings
     static BorderSettings read(ConfigurationSection config, Logger log) {
         boolean active = config.getBoolean("tooltip-borders.enabled", false)
                 && config.getBoolean("tooltip-borders.resource-pack-ready", false)
