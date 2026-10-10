@@ -15,20 +15,17 @@ import java.util.jar.JarFile;
 import java.util.logging.Level;
 
 /**
- * Dresses vanilla drops with lore and a persistent-data identity, keeping the same Material so a formatted
- * coal is still {@code Material.COAL} to every other plugin — it just also reads as {@code item_id: coal}
- * and {@code fuel_id: coal}. The {@link FormattedItemService} is published to the Bukkit ServicesManager
- * so a soft-dependent plugin (RoyalMinions) can look it up and read a drop's identity.
+ * Dresses vanilla drops with lore and a PDC identity while keeping the Material, so a formatted coal is
+ * still {@code Material.COAL}. {@link FormattedItemService} is published to the ServicesManager.
  */
 public final class RoyalItemsPlugin extends JavaPlugin {
 
-    /** bStats project id for RoyalItems. TODO: register at https://bstats.org and set this (0 = inert). */
+    // TODO: register at https://bstats.org and set this (0 = inert)
     private static final int BSTATS_PLUGIN_ID = 0;
 
     private FormattedItemService service;
 
-    /** Opaque handle to the PacketEvents border listener (null if off/absent). Kept as Object so this
-     *  class never references a PacketEvents type — see {@link #setupTooltipBorders()}. */
+    // Object, not a PacketEvents type, so this class loads without PacketEvents installed
     private Object tooltipBorders;
     private org.bukkit.scheduler.BukkitTask inventorySweep;
     private final java.util.Set<java.util.UUID> borderAudience = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -58,7 +55,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
             new UpdateChecker(this, "joogiebear/RoyalItems").check();
         }
 
-        getLogger().info("RoyalItems enabled — " + service.all().size() + " formatted item(s).");
+        getLogger().info("RoyalItems enabled: " + service.all().size() + " formatted item(s).");
     }
 
     @Override
@@ -88,17 +85,8 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         updateBorderAudience(player, player.getGameMode());
     }
 
-    /**
-     * Decide whether this player is shown packet borders, and re-send their inventory when that
-     * changes. The items a client holds were drawn for its old status: a joining player's first
-     * inventory can go out before PlayerJoinEvent adds them, and a player entering creative still holds
-     * bordered copies it could echo back. The re-send runs a tick later, once the join, world change
-     * or new game mode has applied.
-     *
-     * <p>Creative players are never shown packet borders: a creative client sends whole item stacks
-     * back to the server, so a border stamped on the wire would be saved into the real item and outlive
-     * the feature (or the resource pack). Items RoyalItems dressed keep their stored style regardless.
-     */
+    // Never for creative: the client sends whole stacks back, so a wire-only border would be saved into
+    // the real item. On a change, re-send the inventory a tick later, once the new state has applied.
     void updateBorderAudience(org.bukkit.entity.Player player, org.bukkit.GameMode mode) {
         boolean show = mode != org.bukkit.GameMode.CREATIVE && service.worldEnabled(player.getWorld());
         boolean changed = show ? borderAudience.add(player.getUniqueId())
@@ -114,12 +102,8 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         borderAudience.remove(player.getUniqueId());
     }
 
-    /**
-     * Turn on the universal rarity tooltip borders. Reads the rarity→style map from config into plain
-     * strings (no PacketEvents types here), then — only if the PacketEvents plugin is installed — hands
-     * off to the isolated PacketEvents listener. That class is the sole holder of PacketEvents
-     * references, so a missing PacketEvents just skips this step instead of failing to load the plugin.
-     */
+    // TooltipBorderListener is the only class that references PacketEvents; keep it that way so a
+    // missing PacketEvents skips this step instead of failing to load the plugin.
     private void setupTooltipBorders() {
         if (!service.worldEnabled(null)) {
             return;
@@ -129,7 +113,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
             return;
         }
         if (!getServer().getPluginManager().isPluginEnabled("packetevents")) {
-            getLogger().warning("tooltip-borders is enabled but PacketEvents is not installed — rarity "
+            getLogger().warning("tooltip-borders is enabled but PacketEvents is not installed. Rarity "
                     + "borders will only appear on RoyalItems-dressed items. Install PacketEvents "
                     + "(https://modrinth.com/plugin/packetevents) to extend them to every item.");
             return;
@@ -147,7 +131,6 @@ public final class RoyalItemsPlugin extends JavaPlugin {
                 + (settings.debug() ? " [debug on]" : ""));
     }
 
-    /** Anonymous usage stats via bStats. Inert until the project id is set; disable in plugins/bStats. */
     private void setupMetrics() {
         if (BSTATS_PLUGIN_ID <= 0) {
             return;
@@ -158,14 +141,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
                 () -> getConfig().getBoolean("format-on-join", false) ? "enabled" : "disabled"));
     }
 
-    /**
-     * Optional periodic backstop. Dressing is normally event-driven (see {@link FormatListener} —
-     * drop/craft/harvest/pickup dress instantly, and closing any container dresses the inventory), which
-     * covers every normal way an item is obtained at zero idle cost. This timer is off by default
-     * ({@code format-sweep-seconds: 0}); enable it only to also catch items injected straight into an
-     * inventory with no GUI and no event (e.g. {@code /give} or a plugin API). {@code formatInventory}
-     * skips already-dressed and foreign items and only writes when a stack changed, so it stays cheap.
-     */
+    // Backstop for items injected with no event (/give, plugin APIs); FormatListener does the real work.
     private void setupInventorySweep() {
         long seconds = getConfig().getLong("format-sweep-seconds", 0);
         if (!service.worldEnabled(null) || seconds <= 0) {
@@ -182,14 +158,14 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         getLogger().info("Inventory backstop sweep every " + seconds + "s (event-driven dressing is primary).");
     }
 
-    /** The formatting service, for direct in-JVM access (other plugins should prefer the ServicesManager). */
+    /** Other plugins should prefer the ServicesManager. */
     public FormattedItemService service() {
         return service;
     }
 
-    /** Re-read config.yml and every items/**.yml, and rebuild the item maps and templates. */
+    /** Re-read config.yml and every items/**.yml. Throws and keeps the previous catalog on a bad file. */
     public void reloadFormatting() {
-        // Bukkit's reloadConfig logs malformed YAML and substitutes defaults. Reject it first.
+        // reloadConfig would log malformed YAML and silently substitute defaults, so reject it first
         try {
             new org.bukkit.configuration.file.YamlConfiguration().load(new File(getDataFolder(), "config.yml"));
         } catch (IOException | org.bukkit.configuration.InvalidConfigurationException ex) {
@@ -213,11 +189,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) player.updateInventory();
     }
 
-    /**
-     * Drop the bundled defaults into the data folder on first run, without overwriting edits: the
-     * rarity ladder, the rules, and every {@code items/*.yml} (enumerated from the jar so new category
-     * files ship automatically as the bundle grows).
-     */
+    // items/*.yml is enumerated from the jar so new category files ship without a code change
     private void copyDefaultItems() {
         for (String top : new String[]{"rarities.yml", "rules.yml"}) {
             if (!new File(getDataFolder(), top).exists()) {

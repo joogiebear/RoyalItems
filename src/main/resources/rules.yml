@@ -1,22 +1,13 @@
-# ─────────────────────────────────────────────────────────────────────────────
-#  RoyalItems — rules.
-#
-#  The generated catalog under items/ dresses every vanilla item explicitly (run
-#  /royalitems export to regenerate it), so this file is now just a single safety
-#  net: any item the catalog missed — or a future Minecraft version adds — still
-#  gets a name, rarity and border. Explicit items always win, so it never overrides
-#  the catalog or the hand-tuned 0-overrides.yml.
-#
-#  Match by:  match (globs like '*_WOOL', 'DIAMOND_*', '*')  /  materials (a list)
-#  Rarity:    rarity (flat)  OR  tier-rarity (material-name prefix -> rarity)
-#  Templates (placeholders %name% %type% %rarity% %rarity_color% %material% %category% %category_upper%)
-# ─────────────────────────────────────────────────────────────────────────────
+# RoyalItems rules: dress items the catalog in items/ doesn't cover (e.g. ones a new Minecraft
+# version adds). Explicit items always win over a rule.
+#   Match by:  match (globs like '*_WOOL', 'DIAMOND_*', '*') or materials (a list)
+#   Rarity:    rarity (flat) or tier-rarity (material-name prefix -> rarity)
+#   Templates: %name% %type% %rarity% %rarity_color% %material% %category% %category_upper%
 
 rules:
 
-  # Catch-all: dress every remaining item as a common Collection Item, matching the
-  # catalog's own auto-generated look. Dynamic-state items (potions, maps, books,
-  # heads, banners, fireworks, …) are skipped automatically and never dressed.
+  # Catch-all: every remaining item as a common Collection Item. Potions, maps, books,
+  # heads, banners and fireworks are never dressed.
   everything:
     match:
       - '*'

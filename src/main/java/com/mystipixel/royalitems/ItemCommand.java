@@ -14,11 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * {@code /royalitems give <player> <id> [amount]}, {@code reload}, {@code inspect} (everything known
- * about the held item; {@code info} is its older name), {@code formatinv} and {@code export}. Each
- * subcommand is permission-gated; tab completion only offers what the sender may run.
- */
+// /royalitems give <player> <id> [amount] | reload | inspect (alias: info) | formatinv | export
 public final class ItemCommand implements CommandExecutor, TabCompleter {
 
     private final RoyalItemsPlugin plugin;
@@ -36,7 +32,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "give" -> give(sender, args);
             case "reload" -> reload(sender);
-            case "info" -> inspect(sender);   // the older, shorter name for the same inspection
+            case "info" -> inspect(sender);   // older name for inspect
             case "formatinv" -> formatInv(sender, args);
             case "export" -> export(sender);
             case "inspect" -> inspect(sender);
@@ -87,7 +83,6 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             try {
                 amount = Math.max(1, Math.min(64, Integer.parseInt(args[3])));
             } catch (NumberFormatException ignored) {
-                // leave at 1
             }
         }
         ItemStack item = service.format(args[2], 1);
@@ -95,7 +90,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ChatColor.RED + "No formatted item with id '" + args[2] + "'.");
             return;
         }
-        // Hand out stacks no bigger than the item allows, so 16 swords are 16 swords, not one stack of 16.
+        // respect max stack size: 16 swords are 16 stacks, not one stack of 16
         int perStack = Math.max(1, item.getMaxStackSize());
         for (int left = amount; left > 0; left -= perStack) {
             ItemStack stack = item.clone();
@@ -121,18 +116,13 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             int total = CatalogExporter.export(service, dir, overridden);
             sender.sendMessage(ChatColor.GREEN + "Exported " + total + " item(s) to "
                     + ChatColor.WHITE + "catalog-export/" + ChatColor.GREEN
-                    + " — review, then move the files into items/.");
+                    + ". Review, then move the files into items/.");
         } catch (java.io.IOException ex) {
             sender.sendMessage(ChatColor.RED + "Export failed: " + ex.getMessage());
         }
     }
 
-    /**
-     * {@code /royalitems inspect} — everything RoyalItems knows about the held item: its identity,
-     * its dress state (including staleness), and the border detector's verdict with its reasoning.
-     * The border is a documented heuristic, so "why does this item have no border" deserves an
-     * answer that isn't reading the code — the {@code /ah category} principle applied here.
-     */
+    // identity, dress state and the border detector's verdict with its reason
     private void inspect(CommandSender sender) {
         if (!sender.hasPermission("royalitems.admin")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
@@ -169,39 +159,38 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             }
             String state;
             if (def == null) {
-                state = ChatColor.YELLOW + "dressed, but its definition no longer exists — left as-is";
+                state = ChatColor.YELLOW + "dressed, but its definition no longer exists; left as-is";
             } else if (def.material() != held.getType()) {
                 state = ChatColor.YELLOW + "dressed, but the definition now uses " + def.material()
-                        + " — left as-is";
+                        + "; left as-is";
             } else if (def.hash().equals(service.getTag(held, FormattedItemService.DEF_HASH))) {
                 state = ChatColor.GREEN + "dressed, up to date";
             } else {
-                state = ChatColor.YELLOW + "dressed with an older definition — refreshes on the next"
+                state = ChatColor.YELLOW + "dressed with an older definition; refreshes on the next"
                         + " pickup, container close or craft";
             }
             sender.sendMessage(ChatColor.GRAY + "State:    " + state);
         } else {
             String reason = service.skipReason(held);
             sender.sendMessage(ChatColor.GRAY + "State:    " + (reason == null
-                    ? ChatColor.GREEN + "plain and supported — dresses as '"
+                    ? ChatColor.GREEN + "plain and supported; dresses as '"
                     + service.byMaterial(held.getType()).id() + "' on the next pickup, container close or craft"
                     : ChatColor.YELLOW + "not dressed: " + reason));
         }
         inspectBorder(sender, held);
     }
 
-    /** The border half of {@link #inspect}: which rarity the packet layer would see, and why. */
     private void inspectBorder(CommandSender sender, org.bukkit.inventory.ItemStack held) {
         net.kyori.adventure.key.Key explicit = held.getItemMeta().getTooltipStyle();
         if (explicit != null) {
             sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE + explicit
-                    + ChatColor.GRAY + " (explicit tooltip_style — the packet layer leaves it alone)");
+                    + ChatColor.GRAY + " (explicit tooltip_style; the packet layer leaves it alone)");
             return;
         }
         BorderSettings settings = BorderSettings.read(plugin.getConfig(), null);
         if (!settings.active()) {
             sender.sendMessage(ChatColor.GRAY + "Border:   "
-                    + ChatColor.YELLOW + "vanilla — custom packet borders are not opted in (rarity lore still works)");
+                    + ChatColor.YELLOW + "vanilla: custom packet borders are not opted in (rarity lore still works)");
             return;
         }
 
@@ -209,7 +198,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 held.hasItemMeta() ? held.getItemMeta().lore() : null;
         if (lore == null || lore.isEmpty()) {
             sender.sendMessage(ChatColor.GRAY + "Border:   "
-                    + ChatColor.YELLOW + "none — the item has no lore to read a rarity from");
+                    + ChatColor.YELLOW + "none: the item has no lore to read a rarity from");
             return;
         }
         var plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText();
@@ -220,7 +209,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         RarityDetect.Match match = RarityDetect.detect(lines, settings.context(), settings.styles().keySet());
         if (match == null) {
             sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.YELLOW
-                    + "none — no rarity token stands alone on a lore line or shares one with a"
+                    + "none: no rarity token stands alone on a lore line or shares one with a"
                     + " context keyword");
             return;
         }
@@ -231,7 +220,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 + (match.standalone() ? "standalone line" : "context keyword") + ")");
         if (plugin.getServer().getPluginManager().getPlugin("packetevents") == null) {
             sender.sendMessage(ChatColor.GRAY + "          " + ChatColor.YELLOW
-                    + "PacketEvents is not installed — only RoyalItems-dressed items get borders.");
+                    + "PacketEvents is not installed. Only RoyalItems-dressed items get borders.");
         }
     }
 
@@ -247,7 +236,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
             plugin.getLogger().log(java.util.logging.Level.WARNING, "RoyalItems reload failed", ex);
             return;
         }
-        sender.sendMessage(ChatColor.GREEN + "RoyalItems reloaded — " + service.all().size() + " formatted item(s).");
+        sender.sendMessage(ChatColor.GREEN + "RoyalItems reloaded: " + service.all().size() + " formatted item(s).");
     }
 
     private void usage(CommandSender sender, String label) {

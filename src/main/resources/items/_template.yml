@@ -1,11 +1,8 @@
-# RoyalItems — item template (this file is NOT loaded; the leading underscore skips it).
+# RoyalItems item template (not loaded: the leading underscore skips it).
+# Copy an entry into any items/*.yml, then /royalitems reload. Hand-tuned items go in
+# 0-overrides.yml, which sorts first and wins. /royalitems export regenerates the catalog.
 #
-# Most items live in the generated catalog (armor.yml, building.yml, materials.yml, …) — run
-# /royalitems export to (re)generate it. Hand-tuned items go in 0-overrides.yml, which sorts first and
-# wins. Copy an entry below into any items/*.yml and edit, then run /royalitems reload.
-#
-# Only the KEY is required. It is the item_id AND, upper-cased, the material (ender_pearl -> ENDER_PEARL).
-# Everything else is optional with a sensible default:
+# Only the key is required: it is the item_id and, upper-cased, the material (ender_pearl -> ENDER_PEARL).
 #   rarity   : common (drives the border, the name colour, and the footer)
 #   name     : auto = rarity-coloured title case of the key ("Ender Pearl")
 #   lore     : auto = "&8<category>", blank, "<rarity>"   (e.g. "&8Collection Item" / "&f&lCOMMON")
@@ -13,12 +10,11 @@
 #   material : the key upper-cased (override only when it differs from the key)
 #   fuel     : sets a fuel_id tag so RoyalMinions treats the item as minion fuel
 #   tags     : any extra PDC identity, key: value
-# Names/lore take legacy '&' codes OR MiniMessage (<red>, <#ff00ff>, <gradient:..>). Supported items
-# always format, however they are obtained — there is no per-source option.
+# Names/lore take legacy '&' codes or MiniMessage (<red>, <#ff00ff>, <gradient:..>).
 
 formatted-items:
 
-  # Smallest possible entry — everything defaults (common, auto name + lore):
+  # Smallest possible entry, everything defaults (common, auto name + lore):
   # example_min:
   #   category: "Collection Item"
 

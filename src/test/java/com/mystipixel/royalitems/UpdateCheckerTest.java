@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The version compare — pure, so proven without a network or a server. */
+// pure version compare, no network or server needed
 class UpdateCheckerTest {
 
     @Test

@@ -1,27 +1,16 @@
-# ─────────────────────────────────────────────────────────────────────────────
-#  RoyalItems — rarity ladder. Referenced by rules (rules.yml) via %rarity% /
-#  %rarity_color%. Retune the whole game's rarity colours in one place here.
-#    display : the line shown at the foot of an item's lore
-#    color   : the colour a rule may tint a name with (%rarity_color%)
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Coloured tooltip borders (optional)
-# ------------------------------------
-# Add `tooltip-style: royalitems:<id>` to a rarity to draw a coloured border around the whole
-# tooltip box for items of that rarity. This is drawn CLIENT-SIDE from a resource pack, so:
-#   1. The player must be running a resource pack that ships the matching sprites
-#      (assets/royalitems/textures/gui/sprites/tooltip/<id>_background.png and _frame.png).
-#      Supply these sprites yourself; no resource pack is bundled with this plugin.
-#   2. If you point at a style the pack does NOT have, that tooltip shows the missing-texture
-#      checkerboard. So only enable a rarity here once its sprite is actually in your live pack.
-# Styles below are dormant unless tooltip-borders.enabled AND resource-pack-ready are true.
-# Without that opt-in, lore and rarity text use the normal Minecraft tooltip.
+# RoyalItems rarity ladder, used by rules and items via %rarity% / %rarity_color%.
+#   display       : the line shown at the foot of an item's lore
+#   color         : the colour a rule may tint a name with (%rarity_color%)
+#   tooltip-style : optional border sprite, royalitems:<id>. The client pack must ship
+#                   assets/royalitems/textures/gui/sprites/tooltip/<id>_background.png and _frame.png,
+#                   or the tooltip shows the missing-texture checkerboard. None are bundled.
+#                   Ignored unless tooltip-borders.enabled and resource-pack-ready are both true.
 
 rarities:
   common:
     display: "&f&lCOMMON"
     color: "&f"
-    tooltip-style: royalitems:common     # white border, so common reads as a rarity like the rest
+    tooltip-style: royalitems:common
   uncommon:
     display: "&a&lUNCOMMON"
     color: "&a"

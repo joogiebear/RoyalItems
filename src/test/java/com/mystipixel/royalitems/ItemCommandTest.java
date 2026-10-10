@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 
 class ItemCommandTest {
 
-    /** A stack double that remembers its amount and clones into new doubles. */
+    // stack double that remembers its amount and clones into new doubles
     private static ItemStack stack(int maxStack) {
         ItemStack stack = mock(ItemStack.class);
         int[] amount = {1};

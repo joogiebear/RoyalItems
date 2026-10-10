@@ -10,35 +10,30 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The rarity-from-lore heuristic as one pure function, shared by the packet border listener and
- * {@code /royalitems inspect} — so the border a player sees and the explanation an admin reads can
- * never come from two drifting copies of the algorithm.
+ * Rarity-from-lore heuristic shared by the packet borders and {@code /royalitems inspect}.
  *
- * <p>A rarity token counts when its word stands alone on a lore line (the eco/RoyalItems ladder
- * writes {@code &5&lEPIC}) or shares a line with a context keyword (EcoArmor writes
- * {@code Tier: Royal Legendary}); flavour text that merely mentions "a legendary blade" does not.
- * When several match, the highest-ranked tier wins; a token outside the known ladder (a custom
- * rarity) still wins when nothing ranked matches.
+ * <p>A token counts when it stands alone on a lore line ({@code &5&lEPIC}) or shares a line with a
+ * context keyword ({@code Tier: Royal Legendary}). The highest-ranked tier wins; an unranked custom
+ * rarity wins only when nothing ranked matches.
  */
 public final class RarityDetect {
 
-    /** Fixed low-to-high tier order, used to pick the strongest rarity when a lore declares several. */
+    /** Low-to-high tier order. */
     public static final List<String> RANK =
             List.of("COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC");
 
-    /** A verdict: the matched token, the sanitized line it matched on, and why the line counted. */
+    /** {@code standalone} is false when the line counted because of a context keyword. */
     public record Match(String rarity, String line, boolean standalone) {
     }
 
     private RarityDetect() {
     }
 
-    /** Strip legacy {@code §x} codes, trim, and upper-case — eco lore ships literal section codes. */
+    /** Strip legacy {@code §x} codes, trim and upper-case (eco lore ships literal section codes). */
     public static String sanitize(String raw) {
         return raw.replaceAll("§.", "").trim().toUpperCase(Locale.ROOT);
     }
 
-    /** Convenience: sanitize a whole lore. */
     public static List<String> sanitizeAll(List<String> rawLines) {
         List<String> out = new ArrayList<>(rawLines.size());
         for (String raw : rawLines) {
@@ -63,7 +58,7 @@ public final class RarityDetect {
             boolean standalone = words.size() == 1;
             boolean hasContext = !Collections.disjoint(words, contextKeywords);
             if (!standalone && !hasContext) {
-                continue;   // a rarity word buried in flavour text is not a rarity declaration
+                continue;   // "a legendary blade" in flavour text is not a declaration
             }
             for (String token : tokens) {
                 if (words.contains(token) && rank(token) > (best == null ? Integer.MIN_VALUE : rank(best.rarity()))) {
@@ -74,10 +69,7 @@ public final class RarityDetect {
         return best;
     }
 
-    /**
-     * Tier index of a rarity token; -1 for a token outside the ladder, so custom rarities lose to
-     * every ranked tier but still beat "nothing" — previously they could never win at all.
-     */
+    /** Tier index, or -1 for a custom rarity so it loses to every ranked tier but still beats none. */
     public static int rank(String rarity) {
         return RANK.indexOf(rarity);
     }

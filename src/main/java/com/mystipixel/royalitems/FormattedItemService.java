@@ -45,16 +45,13 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * The heart of RoyalItems and its public API. Loads the config into maps (by id and by material), builds
- * one template ItemStack per definition for explicit generation, preserves input state when dressing, and
- * reads/writes the identity in persistent data. Identity is the PDC ({@code item_id}, {@code fuel_id},
- * ...); the name and lore are only what a player sees, never read for logic.
+ * RoyalItems' public API. Identity lives in the PDC ({@code item_id}, {@code fuel_id}, ...); name and
+ * lore are display only, never read for logic.
  *
- * <p>Other plugins get this via the Bukkit ServicesManager: {@code getServicesManager().load(FormattedItemService.class)}.
+ * <p>Get it from the ServicesManager: {@code getServicesManager().load(FormattedItemService.class)}.
  *
- * <p>Threading: reading an item's identity ({@link #getItemId}, {@link #getFuelId}, {@link #getTag}) is
- * safe from any thread. Everything that consults the catalog — formatting, {@link #byId}, {@link #all} —
- * belongs on the main thread, where {@link #reload} replaces it.
+ * <p>Threading: {@link #getItemId}, {@link #getFuelId} and {@link #getTag} are safe from any thread.
+ * Anything that reads the catalog (formatting, {@link #byId}, {@link #all}) must run on the main thread.
  */
 public final class FormattedItemService {
 
@@ -66,7 +63,7 @@ public final class FormattedItemService {
     private static final String NAME_STAMP = "_ri_name";
     private static final String LORE_STAMP = "_ri_lore";
     private static final String STYLE_STAMP = "_ri_style";
-    /** The name stamp of an item whose name we left unset. */
+    // name stamp of an item whose name we left unset
     private static final String NO_NAME = fingerprint(null);
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
@@ -84,13 +81,13 @@ public final class FormattedItemService {
     private final Map<String, FormattedItemDefinition> byId = new HashMap<>();
     private final Map<Material, FormattedItemDefinition> byMaterial = new EnumMap<>(Material.class);
     private final Map<String, ItemStack> templates = new HashMap<>();   // id -> prebuilt stack (amount 1)
-    // tag name -> cached key. Concurrent: getTag/getFuelId are public and may be called off-thread.
+    // concurrent: getTag/getFuelId are public and may be called off-thread
     private final Map<String, NamespacedKey> tagKeys = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, Rarity> rarities = new HashMap<>();       // rarity id -> tier
+    private final Map<String, Rarity> rarities = new HashMap<>();
     private final List<FormattingRule> rules = new ArrayList<>();       // expanded over materials at load
 
-    // Per-load state, only ever set on the throwaway instance that reload() builds.
-    private boolean lenient;                                             // skip broken entries instead of failing
+    // per-load state, only set on the throwaway instance that reload() builds
+    private boolean lenient;
     private int skipped;
     private final Set<String> unknownRarities = new java.util.TreeSet<>();
 
@@ -100,30 +97,24 @@ public final class FormattedItemService {
         this.itemIdKey = key(ITEM_ID);
     }
 
-    // ------------------------------------------------------------------ config
-
     /**
-     * (Re)load everything: rarities, the explicit {@code formatted-items} (config.yml catch-all, then
-     * every {@code items/**.yml}), and the {@code rules} — which are expanded over every material into
-     * concrete definitions. Explicit items always win over a rule, and the first claim of an id or
-     * material wins over any later one. So runtime is only ever a map lookup; the expansion is one-time.
+     * Reload rarities, explicit items and rules. Explicit items win over rules, and the first claim of an
+     * id or material wins. Throws on any broken entry and keeps the previous catalog.
      */
     public void reload() {
         reload(false);
     }
 
     /**
-     * The startup load: a broken entry, rule or file is logged and skipped rather than failing the
-     * whole catalog. At startup there is no live catalog to protect, and one stale material (a
-     * Minecraft update renaming an item in an old data-folder catalog) must not stop the plugin — and
-     * the service RoyalMinions depends on — from enabling. Returns how many pieces were skipped.
+     * Startup load: broken entries, rules or files are logged and skipped instead of failing, so one
+     * stale material can't stop the plugin from enabling. Returns how many pieces were skipped.
      */
     public int reloadSkippingInvalid() {
         return reload(true);
     }
 
     private int reload(boolean lenient) {
-        // Build away from the published service. A broken file must not erase the live catalog.
+        // build away from the published service so a broken file can't erase the live catalog
         FormattedItemService next = new FormattedItemService(plugin);
         next.lenient = lenient;
         next.load();
@@ -174,12 +165,11 @@ public final class FormattedItemService {
         logger.info("Loaded " + byId.size() + " item(s): " + explicit + " defined, " + expanded
                 + " from " + rules.size() + " rule(s), " + rarities.size() + " rarities.");
         if (!unknownRarities.isEmpty()) {
-            logger.warning("Unknown rarity " + unknownRarities + " — those items are shown as common. "
+            logger.warning("Unknown rarity " + unknownRarities + ": those items are shown as common. "
                     + "Fix the spelling or define it in rarities.yml.");
         }
     }
 
-    /** A strict load rethrows; a lenient (startup) load logs the broken piece and carries on without it. */
     private void skipOrThrow(RuntimeException ex, String what) {
         if (!lenient) {
             throw ex;
@@ -203,7 +193,7 @@ public final class FormattedItemService {
         return yaml == null ? null : yaml.getConfigurationSection(key);
     }
 
-    /** The rarity with this id, or common — noting the id so the load can warn about the typo once. */
+    // falls back to common and records the id so the load warns about the typo once
     private Rarity rarity(String id) {
         Rarity rarity = rarities.get(id);
         if (rarity != null) {
@@ -260,7 +250,7 @@ public final class FormattedItemService {
             }
             try {
                 FormattingRule rule = FormattingRule.parse(r);
-                // Validated here, once, so a bad tag drops the whole rule rather than failing mid-expansion.
+                // validated here so a bad tag drops the whole rule rather than failing mid-expansion
                 rule.extraTags().keySet().forEach(this::validateTag);
                 rules.add(rule);
             } catch (RuntimeException ex) {
@@ -291,7 +281,7 @@ public final class FormattedItemService {
         }
     }
 
-    /** Expand every rule over all real items, dressing each material the first matching rule claims. */
+    // first matching rule claims a material
     private int expandRules() {
         if (rules.isEmpty()) {
             return 0;
@@ -299,7 +289,7 @@ public final class FormattedItemService {
         int count = 0;
         for (Material material : Material.values()) {
             if (!isDressable(material) || byMaterial.containsKey(material)) {
-                continue;   // not a dressable item, or already claimed by an explicit entry / earlier rule
+                continue;   // explicit entries and earlier rules claim first
             }
             for (FormattingRule rule : rules) {
                 if (rule.matches(material) && register(expand(rule, material))) {
@@ -338,15 +328,15 @@ public final class FormattedItemService {
                 customTooltipStyles ? rarity.tooltipStyle() : null);
     }
 
-    /** Add a definition; false if its id was taken or the material cannot hold a dressed template. */
+    // false if the id was taken or the material can't hold a dressed template
     private boolean register(FormattedItemDefinition def) {
         if (byId.containsKey(def.id())) {
-            logger.warning("Duplicate formatted-item id '" + def.id() + "' — keeping the first.");
+            logger.warning("Duplicate formatted-item id '" + def.id() + "': keeping the first.");
             return false;
         }
         ItemStack template = build(def, 1);
         if (!template.hasItemMeta()) {
-            return false;   // a technical material that can't hold a name/lore/identity — skip it
+            return false;   // technical material that can't hold a name, lore or identity
         }
         byId.put(def.id(), def);
         FormattedItemDefinition prev = byMaterial.putIfAbsent(def.material(), def);
@@ -363,7 +353,7 @@ public final class FormattedItemService {
         if (tag.equals(ITEM_ID) || tag.equals(DEF_HASH) || tag.startsWith("_ri_")) {
             throw new IllegalArgumentException("Reserved RoyalItems tag: " + tag);
         }
-        key(tag); // Validate before publishing any definitions.
+        key(tag); // throws on an invalid key before any definition is published
     }
 
     private static String title(String raw) {
@@ -388,11 +378,8 @@ public final class FormattedItemService {
         return out;
     }
 
-    /**
-     * Every {@code .yml} under {@code dir} (recursively), skipping {@code _}-prefixed template files, sorted
-     * by path so load order is deterministic — a file named to sort first (e.g. {@code 0-overrides.yml})
-     * reliably claims its ids before the generated catalog, so hand-tuned items win.
-     */
+    // sorted by path so a file named to sort first (0-overrides.yml) claims its ids before the catalog;
+    // _-prefixed template files are skipped
     private static List<File> yamlFiles(File dir) {
         List<File> out = new ArrayList<>();
         collect(dir, out);
@@ -414,14 +401,8 @@ public final class FormattedItemService {
         }
     }
 
-    /**
-     * Parse one clean entry. Only the key is required — it is the {@code item_id} and, upper-cased, the
-     * default {@link Material} ({@code ender_pearl} → {@code ENDER_PEARL}). Everything else is optional and
-     * has a sensible default: {@code rarity} (common) drives the border, name colour and footer; the name
-     * auto-fills to the rarity-coloured title case of the key; the lore auto-fills to the Hypixel footer
-     * ({@code &8<category>}, blank, {@code <rarity>}). {@code fuel:} is shorthand for a {@code fuel_id} tag,
-     * {@code material:} overrides the material, and {@code tags:} still adds any extra identity.
-     */
+    // Only the key is required: it is the item_id and, upper-cased, the default material. Name defaults to
+    // the rarity-coloured title case of the key, lore to "&8<category>", blank, "<rarity>".
     private FormattedItemDefinition parse(String id, ConfigurationSection sec) {
         String materialName = sec.getString("material", id.toUpperCase(Locale.ROOT));
         Material material = Material.matchMaterial(materialName);
@@ -442,7 +423,7 @@ public final class FormattedItemService {
             lore = new ArrayList<>(List.of("&8" + category, "", rarity.display()));
         }
 
-        // Identity tags: item_id is always the key; fuel: is shorthand for fuel_id; tags: adds any others.
+        // fuel: is shorthand for a fuel_id tag; tags: adds any others
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put(ITEM_ID, id);
         String fuel = sec.getString("fuel", null);
@@ -462,17 +443,11 @@ public final class FormattedItemService {
         return new FormattedItemDefinition(id, material, name, lore, tags, tooltipStyle);
     }
 
-    // ------------------------------------------------------------------ building
-
     private ItemStack build(FormattedItemDefinition def, int amount) {
         return dress(new ItemStack(def.material(), Math.max(1, amount)), def, true);
     }
 
-    /**
-     * Render a config string: MiniMessage when it contains a tag ({@code <red>}, {@code <#ff00ff>},
-     * {@code <gradient:..>}), otherwise legacy {@code &} codes — and always non-italic, so a formatted
-     * item reads like a real one.
-     */
+    // MiniMessage when the string contains a <tag>, otherwise legacy & codes; always non-italic
     private static Component text(String s) {
         Component c = looksMiniMessage(s) ? MINI.deserialize(s) : LEGACY.deserialize(s);
         return c.decoration(TextDecoration.ITALIC, false);
@@ -483,19 +458,14 @@ public final class FormattedItemService {
         return open >= 0 && s.indexOf('>', open) > open;
     }
 
-    // ------------------------------------------------------------------ settings
-
     /** Whether formatting is on in this world (the global toggle and the disabled-worlds list). */
     public boolean worldEnabled(World world) {
         return globalEnabled && (world == null || !disabledWorlds.contains(world.getName().toLowerCase(Locale.ROOT)));
     }
 
-    /** Whether to dress a player's inventory when they join. */
     public boolean formatOnJoin() {
         return formatOnJoin;
     }
-
-    // ------------------------------------------------------------------ public API
 
     public boolean isFormattedItem(ItemStack stack) {
         return getItemId(stack) != null;
@@ -518,7 +488,7 @@ public final class FormattedItemService {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
         }
-        // The read-only view reads the stored data in place; getItemMeta() would copy the whole meta.
+        // the read-only view avoids the full meta copy getItemMeta() would make
         return stack.getPersistentDataContainer().get(k, PersistentDataType.STRING);
     }
 
@@ -537,14 +507,9 @@ public final class FormattedItemService {
     }
 
     /**
-     * A formatted version of {@code stack} if its material is supported and it is a plain vanilla item;
-     * otherwise {@code stack} unchanged. Never clobbers an item that already carries a name, lore,
-     * enchant, or another plugin's data (e.g. an EcoItem on the base material) — those keep their
-     * identity. The amount is preserved.
-     *
-     * <p>An item that is already ours is not re-formatted — but it IS refreshed when the definition it
-     * was dressed with has since changed (see {@link #refreshIfStale}), so config edits reach old
-     * items through the same events that dress new ones.
+     * A formatted copy of {@code stack} if its material is supported and it is a plain vanilla item,
+     * otherwise {@code stack} unchanged. Items with a name, lore, enchants or another plugin's data are
+     * never touched. Items already ours are refreshed if their definition changed. Amount is preserved.
      */
     public ItemStack formatIfSupported(ItemStack stack) {
         if (!globalEnabled || stack == null || stack.getType().isAir()) {
@@ -566,16 +531,8 @@ public final class FormattedItemService {
         return worldEnabled(world) ? formatIfSupported(stack) : stack;
     }
 
-    /**
-     * Re-apply the current definition to one of our items whose stamped {@code def_hash} no longer
-     * matches — the mechanism that lets a lore tweak or rarity change propagate to items dropped
-     * before the edit, through normal play, with no sweep.
-     *
-     * <p>Only the fields the definition owns are rewritten — name, lore, identity tags, the stamp and
-     * the tooltip style — on the item's <em>existing</em> meta, so enchants added at an anvil, damage,
-     * and anything else the player earned survive the refresh. An item whose definition was removed
-     * from the catalog, or whose material no longer matches it, is left exactly as it is.
-     */
+    // Rewrites only the fields the definition owns, on the existing meta, so anvil enchants and damage
+    // survive. Items whose definition was removed or whose material changed are left alone.
     private ItemStack refreshIfStale(ItemStack stack, String id) {
         FormattedItemDefinition def = byId.get(id);
         if (def == null || def.material() != stack.getType()) {
@@ -583,12 +540,12 @@ public final class FormattedItemService {
         }
         if (def.hash().equals(readTag(stack, key(DEF_HASH))) && readTag(stack, key(OWNED_TAGS)) != null
                 && !needsStyleCleanup(stack) && !hidesLodestoneName(stack)) {
-            return stack;                        // dressed with the current definition — nothing to do
+            return stack;
         }
         return dress(stack, def, false);
     }
 
-    /** Clone the input, preserving every component except fields explicitly owned by this definition. */
+    // returns a clone; only fields owned by the definition are changed
     private ItemStack dress(ItemStack stack, FormattedItemDefinition def, boolean fresh) {
         ItemStack updated = stack.clone();
         ItemMeta meta = updated.getItemMeta();
@@ -603,11 +560,8 @@ public final class FormattedItemService {
             lines.add(text(line));
         }
         List<Component> lore = lines.isEmpty() ? null : lines;
-        // A field is ours to rewrite when its stamp matches what we last wrote. Items from v0.1.0 have
-        // no stamps; their name is still recognisable, because we always write names with italics
-        // explicitly off and an anvil rename is plain unstyled text. Their lore is not — other
-        // plugins' lore looks the same as ours — so unstamped lore that differs is left alone, and so
-        // is every field a player or plugin changed after we last wrote it.
+        // A field is ours to rewrite only while its stamp matches what we last wrote. Unstamped names are
+        // still ours if italics are explicitly off (anvil renames are unstyled); unstamped lore is not.
         Component currentName = meta.displayName();
         if (fresh || owns(pdc, NAME_STAMP, fingerprint(currentName)) || styledByUs(currentName)) meta.displayName(name);
         if (fresh || owns(pdc, LORE_STAMP, loreFingerprint(meta.lore()))) meta.lore(lore);
@@ -651,7 +605,7 @@ public final class FormattedItemService {
         return updated;
     }
 
-    /** True for a name written through {@link #text}, which always sets italics explicitly off. */
+    // text() always sets italics explicitly off
     private static boolean styledByUs(Component name) {
         return name != null && name.decoration(TextDecoration.ITALIC) == TextDecoration.State.FALSE;
     }
@@ -665,22 +619,16 @@ public final class FormattedItemService {
         return meta instanceof CompassMeta compass && (compass.hasLodestone() || compass.isLodestoneTracked());
     }
 
-    /**
-     * A compass we dressed and named, bound to a lodestone since: re-dress it so our name steps aside.
-     * The material and stamp checks come first, so no other item pays for the meta copy.
-     */
+    // A compass we named that has since been bound to a lodestone. Cheap checks first so other items
+    // skip the meta copy.
     private boolean hidesLodestoneName(ItemStack stack) {
         // By name: the unit tests' Material doubles are copies of the constants, never the constants.
         return stack.getType().name().equals("COMPASS") && !NO_NAME.equals(readTag(stack, key(NAME_STAMP)))
                 && isLodestoneCompass(stack.getItemMeta());
     }
 
-    /**
-     * {@link #needsStyleCleanup(ItemMeta)} for the up-to-date check, which runs on every stack of every
-     * inventory pass. An empty style stamp means we last wrote "no style", so any style the item has now
-     * is someone else's and never ours to clean — the answer is known without copying the meta, and
-     * that is the default setup (custom tooltip styles off).
-     */
+    // Hot path. An empty style stamp means we last wrote no style, so any style now is someone else's:
+    // answered without copying the meta.
     private boolean needsStyleCleanup(ItemStack stack) {
         if (customTooltipStyles || "".equals(readTag(stack, key(STYLE_STAMP)))) return false;
         return needsStyleCleanup(stack.getItemMeta());
@@ -734,7 +682,7 @@ public final class FormattedItemService {
 
     private boolean looksCustom(ItemStack stack) {
         if (!stack.hasItemMeta()) {
-            return false;   // truly plain — safe to format
+            return false;
         }
         ItemMeta meta = stack.getItemMeta();
         return meta.hasDisplayName() || meta.hasLore() || meta.hasEnchants()
@@ -743,13 +691,8 @@ public final class FormattedItemService {
                 || hasDynamicState(meta);
     }
 
-    /**
-     * True for items whose vanilla name or state IS their identity — a potion's effect, an enchanted
-     * book's enchants, a written book, a map, a firework, a stew, a goat horn, a head, a bundle, a fish
-     * bucket, a banner. These are never dressed (even under a catch-all rule), so a "Potion of Healing"
-     * never becomes just "Potion". Gear that carries specialised meta (a crossbow, a shield) is NOT
-     * listed here, so it still formats.
-     */
+    // Items whose vanilla name or state is their identity; never dressed, even by a catch-all rule.
+    // Gear with specialised meta (crossbow, shield) is deliberately not listed.
     private static boolean hasDynamicState(ItemMeta meta) {
         return meta instanceof PotionMeta
                 || meta instanceof EnchantmentStorageMeta
@@ -766,11 +709,7 @@ public final class FormattedItemService {
                 || meta instanceof BannerMeta;
     }
 
-    /**
-     * Why {@link #formatIfSupported} would leave this (non-ours) stack alone, or null when it would
-     * dress it. Exists for {@code /royalitems inspect} — the skip conditions are deliberate, and an
-     * admin asking "why isn't this item dressed" deserves the specific one.
-     */
+    /** Why {@link #formatIfSupported} would leave this non-RoyalItems stack alone, or null if it would dress it. */
     public String skipReason(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
             return "there is no item";
@@ -820,9 +759,8 @@ public final class FormattedItemService {
     }
 
     /**
-     * Whether RoyalItems can dress this material: a real, obtainable item that can hold a name/lore/identity
-     * and whose vanilla name or state is not its identity (potions, maps, books, heads, banners, …). Used by
-     * the catalog exporter to enumerate exactly the items worth listing.
+     * Whether RoyalItems can dress this material: a real item that can hold a name, lore and identity,
+     * and whose vanilla state is not its identity (potions, maps, books, heads, banners, ...).
      */
     public boolean isDressable(Material material) {
         if (material == null || !material.isItem() || material.isAir()) {

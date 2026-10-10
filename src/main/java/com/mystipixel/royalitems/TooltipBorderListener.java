@@ -23,23 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Draws a rarity-coloured border around the whole tooltip of <em>any</em> item — eco gear, vanilla
- * drops, bazaar purchases, minion items — by stamping the client-only {@code minecraft:tooltip_style}
- * component onto outgoing item packets.
- *
- * <p>It never touches the stored item: the border is decided from the item's own rarity lore line and
- * written only on the wire, so it works no matter which plugin built the item and reverts the instant
- * the feature is turned off. The border sprites live in the server's resource pack under the
- * {@code royalitems:} namespace. An item that already declares its own tooltip style is left alone.
- *
- * <p><b>Rarity detection.</b> Each lore line is stripped of legacy {@code §} codes, upper-cased and split
- * into words. A rarity is recognised when its word appears either <em>on its own line</em> (the eco/
- * RoyalItems ladder writes {@code &5&lEPIC}) or <em>on a line that also carries a context keyword</em>
- * such as {@code TIER} or {@code ROYAL} (EcoArmor writes {@code Tier: Royal Legendary}). Requiring the
- * context keyword keeps flavour text that merely mentions "a legendary blade" from being mistaken for a
- * rarity. When several rarities match, the highest tier wins.
- */
+// Stamps a rarity tooltip_style onto outgoing item packets only; the stored item is never changed.
+// The only class that references PacketEvents, so it loads only when PacketEvents is present.
 public final class TooltipBorderListener extends PacketListenerAbstract {
 
     private final Map<String, ResourceLocation> styleByRarity; // UPPER-CASE rarity word -> border location
@@ -61,11 +46,7 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         this.audience = audience;
     }
 
-    /**
-     * Build the listener from raw config (rarity token -&gt; {@code namespace:id} string) and register it
-     * with PacketEvents. Returned as {@link Object} so the caller never has to touch a PacketEvents type —
-     * that keeps every PacketEvents reference inside this class, which only loads when the plugin is present.
-     */
+    // rawStyles: rarity token -> "namespace:id". Returns Object so callers never touch a PacketEvents type.
     public static Object enable(Map<String, String> rawStyles, List<String> contextKeywords,
                                 boolean debug, java.util.logging.Logger log,
                                 java.util.function.Predicate<java.util.UUID> audience) {
@@ -82,7 +63,6 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         return listener;
     }
 
-    /** Unregister a listener returned by {@link #enable}. */
     public static void disable(Object listener) {
         if (listener instanceof PacketListenerAbstract packetListener) {
             PacketEvents.getAPI().getEventManager().unregisterListener(packetListener);
@@ -119,7 +99,7 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         }
     }
 
-    /** Stamp the matching border on {@code item} in place; return whether it was changed. */
+    // mutates item in place
     private boolean apply(ItemStack item) {
         if (item == null || item.isEmpty()) {
             return false;
@@ -135,10 +115,6 @@ public final class TooltipBorderListener extends PacketListenerAbstract {
         return true;
     }
 
-    /**
-     * The border for an item's rarity, read from its lore via the shared {@link RarityDetect}
-     * heuristic, or null if it declares no known rarity.
-     */
     private ResourceLocation styleFor(ItemStack item) {
         Optional<ItemLore> lore = item.getComponent(ComponentTypes.LORE);
         if (lore.isEmpty()) {

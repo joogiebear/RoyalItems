@@ -10,11 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Checks the latest GitHub release against the running version, off the main thread, and logs one line
- * if a newer one exists. Everything fails quietly: no release, a private repo, a rate-limit, or a
- * network hiccup all just skip the notice — an update check is never worth an error in the console.
- */
+/** Logs one line if a newer GitHub release exists. Runs async and fails silently. */
 public final class UpdateChecker {
 
     private static final Pattern TAG = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
@@ -41,7 +37,7 @@ public final class UpdateChecker {
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
             if (conn.getResponseCode() != 200) {
-                return;   // no release, private, or rate-limited — stay quiet
+                return;   // no release, private, or rate-limited
             }
             StringBuilder body = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
@@ -60,14 +56,14 @@ public final class UpdateChecker {
                 Matcher url = HTML_URL.matcher(body);
                 String link = url.find() ? url.group(1) : "https://github.com/" + repo + "/releases";
                 plugin.getLogger().info("A new version is available: " + strip(tag.group(1))
-                        + " (you have " + current + ") — " + link);
+                        + " (you have " + current + "): " + link);
             }
         } catch (Exception e) {
             // a failed update check is never a problem worth reporting
         }
     }
 
-    /** True if release version {@code latest} is strictly newer than {@code current} (numeric, dotted). */
+    // numeric, dotted; a leading v is ignored
     static boolean isNewer(String latest, String current) {
         int[] a = parse(latest);
         int[] b = parse(current);

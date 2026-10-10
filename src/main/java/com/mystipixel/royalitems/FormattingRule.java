@@ -12,15 +12,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/* Rules dress whole families of items; supported items always format (no per-source opt-in). */
-
 /**
- * A pattern that dresses a whole family of items from one config block, so "every tool and every armour
- * piece" is a handful of rules instead of hundreds of entries. A rule matches materials by name glob
- * ({@code *_SWORD}, {@code DIAMOND_*}) or an explicit list, picks a rarity — a flat one, or by the
- * material's tier prefix ({@code DIAMOND_} → rare, {@code NETHERITE_} → epic) — and fills a name/lore
- * template with placeholders (%name% %type% %rarity% %rarity_color% %material%). At load each rule is
- * expanded into concrete per-material definitions, so runtime stays a plain map lookup.
+ * Dresses a family of items from one config block. Matches by glob ({@code *_SWORD}) or explicit list,
+ * picks a rarity (flat or by tier prefix, {@code DIAMOND_} -> rare), and fills name/lore templates.
+ * Placeholders: %name% %type% %rarity% %rarity_color% %material% %category% %category_upper%.
  */
 public final class FormattingRule {
 
@@ -84,7 +79,6 @@ public final class FormattingRule {
                 nameTemplate, loreTemplate, extraTags);
     }
 
-    /** Whether this rule applies to {@code material}. */
     public boolean matches(Material material) {
         if (materials.contains(material)) {
             return true;
@@ -98,7 +92,7 @@ public final class FormattingRule {
         return false;
     }
 
-    /** The rarity id for a material: a tier-prefix match if any, else the rule's default. */
+    /** A tier-prefix match if any, else the rule's default rarity. */
     public String rarityFor(Material material) {
         String name = material.name();
         for (Map.Entry<String, String> e : tierRarity.entrySet()) {
@@ -125,7 +119,6 @@ public final class FormattingRule {
         return extraTags;
     }
 
-    /** Turn a glob ({@code *_SWORD}) into an anchored, case-insensitive pattern over the material name. */
     private static Pattern globToPattern(String glob) {
         StringBuilder sb = new StringBuilder();
         for (char c : glob.trim().toUpperCase(Locale.ROOT).toCharArray()) {
