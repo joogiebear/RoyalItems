@@ -1,7 +1,6 @@
 package com.mystipixel.royalitems;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,10 +18,12 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
 
     private final RoyalItemsPlugin plugin;
     private final FormattedItemService service;
+    private final MessageManager messages;
 
-    public ItemCommand(RoyalItemsPlugin plugin, FormattedItemService service) {
+    public ItemCommand(RoyalItemsPlugin plugin, FormattedItemService service, MessageManager messages) {
         this.plugin = plugin;
         this.service = service;
+        this.messages = messages;
     }
 
     @Override
@@ -43,39 +44,38 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
 
     private void formatInv(CommandSender sender, String[] args) {
         if (!sender.hasPermission("royalitems.formatinv")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            messages.send(sender, "no-permission");
             return;
         }
         Player target;
         if (args.length >= 2) {
             target = Bukkit.getPlayerExact(args[1]);
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' is not online.");
+                messages.send(sender, "player-not-online", "player", args[1]);
                 return;
             }
         } else if (sender instanceof Player self) {
             target = self;
         } else {
-            sender.sendMessage(ChatColor.GRAY + "Usage: /royalitems formatinv <player>");
+            messages.send(sender, "formatinv.usage");
             return;
         }
         int changed = service.formatInventory(target);
-        sender.sendMessage(ChatColor.GREEN + "Dressed " + changed + " stack(s) in "
-                + target.getName() + "'s inventory.");
+        messages.send(sender, "formatinv.done", "count", String.valueOf(changed), "player", target.getName());
     }
 
     private void give(CommandSender sender, String[] args) {
         if (!sender.hasPermission("royalitems.give")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            messages.send(sender, "no-permission");
             return;
         }
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.GRAY + "Usage: /royalitems give <player> <id> [amount]");
+            messages.send(sender, "give.usage");
             return;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' is not online.");
+            messages.send(sender, "player-not-online", "player", args[1]);
             return;
         }
         int amount = 1;
@@ -87,7 +87,7 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         }
         ItemStack item = service.format(args[2], 1);
         if (item == null) {
-            sender.sendMessage(ChatColor.RED + "No formatted item with id '" + args[2] + "'.");
+            messages.send(sender, "give.unknown-item", "id", args[2]);
             return;
         }
         // respect max stack size: 16 swords are 16 stacks, not one stack of 16
@@ -99,13 +99,13 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                 target.getWorld().dropItemNaturally(target.getLocation(), overflow);
             }
         }
-        sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + args[2].toLowerCase(java.util.Locale.ROOT)
-                + " to " + target.getName() + ".");
+        messages.send(sender, "give.done", "amount", String.valueOf(amount),
+                "id", args[2].toLowerCase(java.util.Locale.ROOT), "player", target.getName());
     }
 
     private void export(CommandSender sender) {
         if (!sender.hasPermission("royalitems.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            messages.send(sender, "no-permission");
             return;
         }
         java.io.File dir = new java.io.File(plugin.getDataFolder(), "catalog-export");
@@ -114,68 +114,67 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
                     new java.io.File(plugin.getDataFolder(), "items/0-overrides.yml"),
                     bundled == null ? null : new java.io.InputStreamReader(bundled, java.nio.charset.StandardCharsets.UTF_8));
             int total = CatalogExporter.export(service, dir, overridden);
-            sender.sendMessage(ChatColor.GREEN + "Exported " + total + " item(s) to "
-                    + ChatColor.WHITE + "catalog-export/" + ChatColor.GREEN
-                    + ". Review, then move the files into items/.");
+            messages.send(sender, "export.done", "count", String.valueOf(total));
         } catch (java.io.IOException ex) {
-            sender.sendMessage(ChatColor.RED + "Export failed: " + ex.getMessage());
+            messages.send(sender, "export.failed", "error", String.valueOf(ex.getMessage()));
         }
     }
 
     // identity, dress state and the border detector's verdict with its reason
     private void inspect(CommandSender sender) {
         if (!sender.hasPermission("royalitems.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            messages.send(sender, "no-permission");
             return;
         }
         if (!(sender instanceof org.bukkit.entity.Player player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can inspect a held item.");
+            messages.send(sender, "inspect.players-only");
             return;
         }
         org.bukkit.inventory.ItemStack held = player.getInventory().getItemInMainHand();
         if (held.getType().isAir()) {
-            sender.sendMessage(ChatColor.RED + "Hold the item you want to inspect.");
+            messages.send(sender, "inspect.hold-item");
             return;
         }
 
-        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Item Inspection");
-        sender.sendMessage(ChatColor.GRAY + "Material: " + ChatColor.WHITE + held.getType());
+        messages.send(sender, "inspect.header");
+        messages.send(sender, "inspect.material", "material", String.valueOf(held.getType()));
 
         String id = service.getItemId(held);
         if (id != null) {
             String fuel = service.getFuelId(held);
-            sender.sendMessage(ChatColor.GRAY + "item_id:  " + ChatColor.WHITE + id
-                    + (fuel == null ? "" : ChatColor.GRAY + "   fuel_id: " + ChatColor.WHITE + fuel));
+            messages.send(sender, "inspect.item-id", "id", id,
+                    "fuel", fuel == null ? "" : messages.get("inspect.fuel-id", "fuel", fuel));
             FormattedItemDefinition def = service.byId(id);
             if (def != null) {
                 for (Map.Entry<String, String> tag : def.tags().entrySet()) {
                     if (!tag.getKey().equals(FormattedItemService.ITEM_ID)
                             && !tag.getKey().equals(FormattedItemService.FUEL_ID)) {
                         String value = service.getTag(held, tag.getKey());
-                        sender.sendMessage(ChatColor.GRAY + tag.getKey() + ": " + (value == null
-                                ? ChatColor.YELLOW + "(not on this item yet)" : ChatColor.WHITE + value));
+                        if (value == null) {
+                            messages.send(sender, "inspect.tag-missing", "tag", tag.getKey());
+                        } else {
+                            messages.send(sender, "inspect.tag", "tag", tag.getKey(), "value", value);
+                        }
                     }
                 }
             }
             String state;
             if (def == null) {
-                state = ChatColor.YELLOW + "dressed, but its definition no longer exists; left as-is";
+                state = messages.get("inspect.states.definition-missing");
             } else if (def.material() != held.getType()) {
-                state = ChatColor.YELLOW + "dressed, but the definition now uses " + def.material()
-                        + "; left as-is";
+                state = messages.get("inspect.states.material-changed", "material", String.valueOf(def.material()));
             } else if (def.hash().equals(service.getTag(held, FormattedItemService.DEF_HASH))) {
-                state = ChatColor.GREEN + "dressed, up to date";
+                state = messages.get("inspect.states.up-to-date");
             } else {
-                state = ChatColor.YELLOW + "dressed with an older definition; refreshes on the next"
-                        + " pickup, container close or craft";
+                state = messages.get("inspect.states.outdated");
             }
-            sender.sendMessage(ChatColor.GRAY + "State:    " + state);
+            messages.send(sender, "inspect.state", "state", state);
         } else {
-            String reason = service.skipReason(held);
-            sender.sendMessage(ChatColor.GRAY + "State:    " + (reason == null
-                    ? ChatColor.GREEN + "plain and supported; dresses as '"
-                    + service.byMaterial(held.getType()).id() + "' on the next pickup, container close or craft"
-                    : ChatColor.YELLOW + "not dressed: " + reason));
+            FormattedItemService.SkipReason reason = service.skipReason(held);
+            String state = reason == null
+                    ? messages.get("inspect.states.supported", "id", service.byMaterial(held.getType()).id())
+                    : messages.get("inspect.states.not-dressed", "reason", skipReason(reason, held));
+            messages.send(sender, "inspect.state", "state", state);
         }
         inspectBorder(sender, held);
     }
@@ -183,22 +182,19 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
     private void inspectBorder(CommandSender sender, org.bukkit.inventory.ItemStack held) {
         net.kyori.adventure.key.Key explicit = held.getItemMeta().getTooltipStyle();
         if (explicit != null) {
-            sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE + explicit
-                    + ChatColor.GRAY + " (explicit tooltip_style; the packet layer leaves it alone)");
+            messages.send(sender, "inspect.border.explicit", "style", explicit.toString());
             return;
         }
         BorderSettings settings = BorderSettings.read(plugin.getConfig(), null);
         if (!settings.active()) {
-            sender.sendMessage(ChatColor.GRAY + "Border:   "
-                    + ChatColor.YELLOW + "vanilla: custom packet borders are not opted in (rarity lore still works)");
+            messages.send(sender, "inspect.border.vanilla");
             return;
         }
 
         java.util.List<net.kyori.adventure.text.Component> lore =
                 held.hasItemMeta() ? held.getItemMeta().lore() : null;
         if (lore == null || lore.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + "Border:   "
-                    + ChatColor.YELLOW + "none: the item has no lore to read a rarity from");
+            messages.send(sender, "inspect.border.no-lore");
             return;
         }
         var plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText();
@@ -208,39 +204,51 @@ public final class ItemCommand implements CommandExecutor, TabCompleter {
         }
         RarityDetect.Match match = RarityDetect.detect(lines, settings.context(), settings.styles().keySet());
         if (match == null) {
-            sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.YELLOW
-                    + "none: no rarity token stands alone on a lore line or shares one with a"
-                    + " context keyword");
+            messages.send(sender, "inspect.border.no-match");
             return;
         }
-        sender.sendMessage(ChatColor.GRAY + "Border:   " + ChatColor.WHITE
-                + match.rarity().toLowerCase(java.util.Locale.ROOT)
-                + ChatColor.GRAY + " → " + ChatColor.WHITE + settings.styles().get(match.rarity())
-                + ChatColor.GRAY + " (matched '" + match.line() + "', "
-                + (match.standalone() ? "standalone line" : "context keyword") + ")");
+        messages.send(sender, "inspect.border.matched",
+                "rarity", match.rarity().toLowerCase(java.util.Locale.ROOT),
+                "style", String.valueOf(settings.styles().get(match.rarity())),
+                "line", match.line(),
+                "match", match.standalone() ? messages.get("inspect.border.standalone")
+                        : messages.get("inspect.border.context"));
         if (plugin.getServer().getPluginManager().getPlugin("packetevents") == null) {
-            sender.sendMessage(ChatColor.GRAY + "          " + ChatColor.YELLOW
-                    + "PacketEvents is not installed. Only RoyalItems-dressed items get borders.");
+            messages.send(sender, "inspect.border.no-packetevents");
         }
     }
 
     private void reload(CommandSender sender) {
         if (!sender.hasPermission("royalitems.reload")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission for that.");
+            messages.send(sender, "no-permission");
             return;
         }
         try {
             plugin.reloadFormatting();
         } catch (RuntimeException ex) {
-            sender.sendMessage(ChatColor.RED + "Reload failed; the previous item catalog remains active: " + ex.getMessage());
+            messages.send(sender, "reload.failed", "error", String.valueOf(ex.getMessage()));
             plugin.getLogger().log(java.util.logging.Level.WARNING, "RoyalItems reload failed", ex);
             return;
         }
-        sender.sendMessage(ChatColor.GREEN + "RoyalItems reloaded: " + service.all().size() + " formatted item(s).");
+        messages.reload();
+        messages.send(sender, "reload.done", "count", String.valueOf(service.all().size()));
     }
 
     private void usage(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.GRAY + "Usage: /" + label + " <give|reload|inspect|formatinv|export>");
+        messages.send(sender, "usage", "label", label);
+    }
+
+    private String skipReason(FormattedItemService.SkipReason reason, ItemStack held) {
+        return switch (reason) {
+            case NO_ITEM -> messages.get("inspect.reasons.no-item");
+            case NO_DEFINITION -> messages.get("inspect.reasons.no-definition", "material", String.valueOf(held.getType()));
+            case VANILLA_STATE -> messages.get("inspect.reasons.vanilla-state");
+            case CUSTOM_NAME -> messages.get("inspect.reasons.custom-name");
+            case HAS_LORE -> messages.get("inspect.reasons.has-lore");
+            case ENCHANTED -> messages.get("inspect.reasons.enchanted");
+            case CUSTOM_ITEM_NAME -> messages.get("inspect.reasons.custom-item-name");
+            case PLUGIN_DATA -> messages.get("inspect.reasons.plugin-data");
+        };
     }
 
     @Override

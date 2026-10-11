@@ -44,7 +44,7 @@ public final class RoyalItemsPlugin extends JavaPlugin {
         getServer().getServicesManager().register(FormattedItemService.class, service, this, ServicePriority.Normal);
         getServer().getPluginManager().registerEvents(new FormatListener(this, service), this);
 
-        ItemCommand command = new ItemCommand(this, service);
+        ItemCommand command = new ItemCommand(this, service, new MessageManager(this));
         getCommand("royalitems").setExecutor(command);
         getCommand("royalitems").setTabCompleter(command);
 

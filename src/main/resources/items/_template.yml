@@ -5,8 +5,9 @@
 # Only the key is required: it is the item_id and, upper-cased, the material (ender_pearl -> ENDER_PEARL).
 #   rarity   : common (drives the border, the name colour, and the footer)
 #   name     : auto = rarity-coloured title case of the key ("Ender Pearl")
-#   lore     : auto = "&8<category>", blank, "<rarity>"   (e.g. "&8Collection Item" / "&f&lCOMMON")
-#   category : "Collection Item" (the grey descriptor line in the auto lore)
+#   lore     : auto = config.yml auto-lore, by default "&8<category>", blank, "<rarity>"
+#              (e.g. "&8Collection Item" / "&f&lCOMMON")
+#   category : config.yml auto-lore.default-category, "Collection Item" by default
 #   material : the key upper-cased (override only when it differs from the key)
 #   fuel     : sets a fuel_id tag so RoyalMinions treats the item as minion fuel
 #   tags     : any extra PDC identity, key: value

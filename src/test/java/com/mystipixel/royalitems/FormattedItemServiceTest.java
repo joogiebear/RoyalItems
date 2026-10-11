@@ -46,9 +46,34 @@ class FormattedItemServiceTest {
         when(plugin.getName()).thenReturn("RoyalItems");
         when(plugin.namespace()).thenReturn("royalitems");
         when(plugin.getLogger()).thenReturn(Logger.getAnonymousLogger());
-        when(plugin.getConfig()).thenReturn(new YamlConfiguration());
+        config = new YamlConfiguration();
+        try (var bundled = getClass().getResourceAsStream("/config.yml")) {
+            config.setDefaults(YamlConfiguration.loadConfiguration(
+                    new java.io.InputStreamReader(bundled, java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        when(plugin.getConfig()).thenReturn(config);
         when(plugin.getDataFolder()).thenReturn(directory.toFile());
         service = new FormattedItemService(plugin);
+    }
+
+    private YamlConfiguration config;
+
+    // what parse() gives an entry without lore: the bundled template must reproduce the old fixed layout
+    @Test void autoLoreDefaultsToTheOldLayout() {
+        Rarity epic = new Rarity("epic", "&5&lEPIC", "&5", null);
+        List<String> template = config.getStringList("auto-lore.lines");
+        String category = config.getString("auto-lore.default-category");
+        assertEquals(List.of("&8Collection Item", "", "&5&lEPIC"),
+                FormattedItemService.autoLore(template, category, epic));
+        assertEquals(List.of("&8" + "Ore", "", epic.display()), FormattedItemService.autoLore(template, "Ore", epic));
+    }
+
+    @Test void autoLoreFollowsTheConfiguredTemplate() {
+        Rarity common = new Rarity("common", "&f&lCOMMON", "&f", null);
+        assertEquals(List.of("&f&lCOMMON &7Loot"),
+                FormattedItemService.autoLore(List.of("%rarity% &7%category%"), "Loot", common));
     }
 
     private FormattedItemDefinition define(Material material, String name, List<String> lore, Map<String, String> extras) throws Exception {

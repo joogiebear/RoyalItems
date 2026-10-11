@@ -56,7 +56,7 @@ PDC instead.
 ## Installation
 
 1. Drop `RoyalItems.jar` into `plugins/` (and PacketEvents, for universal borders).
-2. Start the server once — it generates `config.yml`, `rarities.yml`, `rules.yml`, and `items/`.
+2. Start the server once — it generates `config.yml`, `messages.yml`, `rarities.yml`, `rules.yml`, and `items/`.
 3. Edit to taste and run `/royalitems reload`.
 
 ---
@@ -65,7 +65,8 @@ PDC instead.
 
 ```
 plugins/RoyalItems/
-├── config.yml       master switch, disabled worlds, join/sweep options, tooltip borders
+├── config.yml       master switch, disabled worlds, join/sweep options, auto lore, tooltip borders
+├── messages.yml     /royalitems chat output
 ├── rarities.yml     the rarity ladder (Common → Mythic) + per-rarity tooltip styles
 ├── rules.yml        the safety-net rule for anything the catalog misses
 └── items/           the catalog (scanned recursively; explicit items always beat rules)
@@ -119,7 +120,8 @@ formatted-items:
       - "&f&lCOMMON"
 ```
 
-With no `lore:` the footer auto-fills to `&8<category>`, a blank line, and the rarity display. With no
+With no `lore:` the footer auto-fills from `auto-lore` in `config.yml`: by default `&8<category>`, a blank
+line, and the rarity display, with `Collection Item` as the category when an entry has none. With no
 `name:` the name auto-fills to the rarity-coloured title case of the key. `tags:` adds any further
 identity values, `material:` overrides the material, `tooltip-style:` overrides the border.
 

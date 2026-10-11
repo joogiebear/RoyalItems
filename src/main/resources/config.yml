@@ -16,6 +16,15 @@ disabled-worlds: []
 # the same on demand.
 format-on-join: true
 
+# Lore for an item entry that has no lore of its own, one line per entry. %category% is the entry's
+# category (default-category when it has none), %rarity% its rarity's display text from rarities.yml.
+auto-lore:
+  default-category: "Collection Item"
+  lines:
+    - "&8%category%"
+    - ""
+    - "%rarity%"
+
 # Seconds between inventory sweeps; 0 = off. Dressing is already event-driven (drops, crafts,
 # pickups, closing a container), so only set this to catch items injected with no event, such as
 # /give or another plugin's API.
