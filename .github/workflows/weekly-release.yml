@@ -42,8 +42,7 @@ jobs:
           java-version: '25'
           cache: maven
 
-      # Only the build workspace changes: no release commits or bot-authored source history.
-      - name: Set embedded version, test and package
+      - name: Set pom version, test and package
         if: steps.prep.outputs.release == 'true'
         env:
           VERSION: ${{ steps.prep.outputs.version }}
@@ -52,6 +51,22 @@ jobs:
           mvn -B --no-transfer-progress clean verify
           cp "target/royalitems-$VERSION.jar" "royalitems-$VERSION.jar"
 
+      # Commits the bumped pom so main matches the latest release, as the other Royal plugins do.
+      # The token is passed here only, so the Maven build above runs without push credentials.
+      - name: Commit version bump and tag
+        if: steps.prep.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          git config user.name joogiebear
+          git config user.email joogiebear@protonmail.com
+          git add pom.xml
+          git commit -m "chore(release): $VERSION"
+          git tag "$VERSION"
+          git push --atomic "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:${GITHUB_REF_NAME}" "refs/tags/$VERSION"
+
       - name: Publish release
         if: steps.prep.outputs.release == 'true'
         env:
@@ -59,4 +74,4 @@ jobs:
           VERSION: ${{ steps.prep.outputs.version }}
         run: |
           gh release create "$VERSION" "royalitems-$VERSION.jar" \
-            --target "$GITHUB_SHA" --title "$VERSION" --notes-file RELEASE_NOTES.md --latest
+            --verify-tag --title "$VERSION" --notes-file RELEASE_NOTES.md --latest
