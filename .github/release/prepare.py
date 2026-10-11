@@ -33,7 +33,7 @@ def prepare():
     if not changes and os.environ.get("FORCE_RELEASE") != "true":
         return {"release": "false"}
     version = next_version(git("tag").splitlines(), today)
-    notes = f"## {version} — {today}\n\n" + "\n".join(f"- {change}" for change in changes)
+    notes = f"## {version} - {today}\n\n" + "\n".join(f"- {change}" for change in changes)
     notes += "\n\nInstall the JAR in `plugins/` and restart the server.\n"
     Path("RELEASE_NOTES.md").write_text(notes, encoding="utf-8")
     return {"release": "true", "version": version}
