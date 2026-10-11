@@ -1,4 +1,4 @@
-"""Prepare a calendar-versioned release without creating source commits."""
+"""Choose the next calendar version and write the release notes."""
 import datetime
 import os
 import re
