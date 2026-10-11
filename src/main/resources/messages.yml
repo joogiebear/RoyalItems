@@ -1,0 +1,65 @@
+# RoyalItems chat messages (the /royalitems command). Colour codes use &. Placeholders look like %player%.
+# A key missing from this file falls back to the plugin's built-in default.
+# Set a line to "" to hide it.
+
+no-permission: "&cYou don't have permission for that."
+player-not-online: "&cPlayer '%player%' is not online."
+usage: "&7Usage: /%label% <give|reload|inspect|formatinv|export>"
+
+give:
+  usage: "&7Usage: /royalitems give <player> <id> [amount]"
+  unknown-item: "&cNo formatted item with id '%id%'."
+  done: "&aGave %amount%x %id% to %player%."
+
+formatinv:
+  usage: "&7Usage: /royalitems formatinv <player>"
+  done: "&aDressed %count% stack(s) in %player%'s inventory."
+
+export:
+  done: "&aExported %count% item(s) to &fcatalog-export/&a. Review, then move the files into items/."
+  failed: "&cExport failed: %error%"
+
+reload:
+  done: "&aRoyalItems reloaded: %count% formatted item(s)."
+  failed: "&cReload failed; the previous item catalog remains active: %error%"
+
+# /royalitems inspect: what RoyalItems knows about the held item.
+inspect:
+  players-only: "&cOnly players can inspect a held item."
+  hold-item: "&cHold the item you want to inspect."
+  header: "&6&lItem Inspection"
+  material: "&7Material: &f%material%"
+  # %fuel% is fuel-id below, or empty when the item has no fuel_id
+  item-id: "&7item_id:  &f%id%%fuel%"
+  fuel-id: "&7   fuel_id: &f%fuel%"
+  tag: "&7%tag%: &f%value%"
+  tag-missing: "&7%tag%: &e(not on this item yet)"
+  # %state% is one of the states below
+  state: "&7State:    %state%"
+  states:
+    definition-missing: "&edressed, but its definition no longer exists; left as-is"
+    material-changed: "&edressed, but the definition now uses %material%; left as-is"
+    up-to-date: "&adressed, up to date"
+    outdated: "&edressed with an older definition; refreshes on the next pickup, container close or craft"
+    supported: "&aplain and supported; dresses as '%id%' on the next pickup, container close or craft"
+    # %reason% is one of the reasons below
+    not-dressed: "&enot dressed: %reason%"
+  reasons:
+    no-item: "there is no item"
+    no-definition: "no definition or rule covers %material%"
+    vanilla-state: "its vanilla state is its identity (potion, book, head, banner, …)"
+    custom-name: "it already has a custom name"
+    has-lore: "it already has lore"
+    enchanted: "it is enchanted"
+    custom-item-name: "it already has a custom item name or model"
+    plugin-data: "another plugin owns it (persistent data present)"
+  border:
+    explicit: "&7Border:   &f%style%&7 (explicit tooltip_style; the packet layer leaves it alone)"
+    vanilla: "&7Border:   &evanilla: custom packet borders are not opted in (rarity lore still works)"
+    no-lore: "&7Border:   &enone: the item has no lore to read a rarity from"
+    no-match: "&7Border:   &enone: no rarity token stands alone on a lore line or shares one with a context keyword"
+    # %match% is standalone or context below
+    matched: "&7Border:   &f%rarity%&7 → &f%style%&7 (matched '%line%', %match%)"
+    standalone: "standalone line"
+    context: "context keyword"
+    no-packetevents: "&7          &ePacketEvents is not installed. Only RoyalItems-dressed items get borders."

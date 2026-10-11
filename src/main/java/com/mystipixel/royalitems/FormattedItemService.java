@@ -76,6 +76,8 @@ public final class FormattedItemService {
     private boolean globalEnabled = true;
     private boolean customTooltipStyles;
     private boolean formatOnJoin;
+    private List<String> autoLore = List.of();
+    private String defaultCategory;
     private final Set<String> disabledWorlds = new HashSet<>();
 
     private final Map<String, FormattedItemDefinition> byId = new HashMap<>();
@@ -141,6 +143,8 @@ public final class FormattedItemService {
         customTooltipStyles = plugin.getConfig().getBoolean("tooltip-borders.enabled", false)
                 && plugin.getConfig().getBoolean("tooltip-borders.resource-pack-ready", false);
         formatOnJoin = plugin.getConfig().getBoolean("format-on-join", false);
+        autoLore = List.copyOf(plugin.getConfig().getStringList("auto-lore.lines"));
+        defaultCategory = plugin.getConfig().getString("auto-lore.default-category");
         disabledWorlds.clear();
         for (String w : plugin.getConfig().getStringList("disabled-worlds")) {
             disabledWorlds.add(w.toLowerCase(Locale.ROOT));
@@ -402,7 +406,7 @@ public final class FormattedItemService {
     }
 
     // Only the key is required: it is the item_id and, upper-cased, the default material. Name defaults to
-    // the rarity-coloured title case of the key, lore to "&8<category>", blank, "<rarity>".
+    // the rarity-coloured title case of the key, lore to config.yml auto-lore.
     private FormattedItemDefinition parse(String id, ConfigurationSection sec) {
         String materialName = sec.getString("material", id.toUpperCase(Locale.ROOT));
         Material material = Material.matchMaterial(materialName);
@@ -411,7 +415,7 @@ public final class FormattedItemService {
         }
 
         Rarity rarity = rarity(sec.getString("rarity", "common").toLowerCase(Locale.ROOT));
-        String category = sec.getString("category", "Collection Item");
+        String category = sec.getString("category", defaultCategory);
 
         String name = sec.getString("name", sec.getString("display-name", null));
         if (name == null) {
@@ -420,7 +424,7 @@ public final class FormattedItemService {
 
         List<String> lore = sec.getStringList("lore");
         if (lore.isEmpty()) {
-            lore = new ArrayList<>(List.of("&8" + category, "", rarity.display()));
+            lore = autoLore(autoLore, category, rarity);
         }
 
         // fuel: is shorthand for a fuel_id tag; tags: adds any others
@@ -441,6 +445,14 @@ public final class FormattedItemService {
         String tooltipStyle = customTooltipStyles ? sec.getString("tooltip-style", rarity.tooltipStyle()) : null;
         if (tooltipStyle != null && !tooltipStyle.isBlank()) Key.key(tooltipStyle);
         return new FormattedItemDefinition(id, material, name, lore, tags, tooltipStyle);
+    }
+
+    static List<String> autoLore(List<String> template, String category, Rarity rarity) {
+        List<String> lore = new ArrayList<>(template.size());
+        for (String line : template) {
+            lore.add(MessageManager.fill(line, "category", category, "rarity", rarity.display()));
+        }
+        return lore;
     }
 
     private ItemStack build(FormattedItemDefinition def, int amount) {
@@ -709,35 +721,40 @@ public final class FormattedItemService {
                 || meta instanceof BannerMeta;
     }
 
+    /** Why {@link #formatIfSupported} would leave a non-RoyalItems stack alone. */
+    public enum SkipReason {
+        NO_ITEM, NO_DEFINITION, VANILLA_STATE, CUSTOM_NAME, HAS_LORE, ENCHANTED, CUSTOM_ITEM_NAME, PLUGIN_DATA
+    }
+
     /** Why {@link #formatIfSupported} would leave this non-RoyalItems stack alone, or null if it would dress it. */
-    public String skipReason(ItemStack stack) {
+    public SkipReason skipReason(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
-            return "there is no item";
+            return SkipReason.NO_ITEM;
         }
         if (byMaterial.get(stack.getType()) == null) {
-            return "no definition or rule covers " + stack.getType();
+            return SkipReason.NO_DEFINITION;
         }
         if (!stack.hasItemMeta()) {
             return null;
         }
         ItemMeta meta = stack.getItemMeta();
         if (hasDynamicState(meta)) {
-            return "its vanilla state is its identity (potion, book, head, banner, …)";
+            return SkipReason.VANILLA_STATE;
         }
         if (meta.hasDisplayName()) {
-            return "it already has a custom name";
+            return SkipReason.CUSTOM_NAME;
         }
         if (meta.hasLore()) {
-            return "it already has lore";
+            return SkipReason.HAS_LORE;
         }
         if (meta.hasEnchants()) {
-            return "it is enchanted";
+            return SkipReason.ENCHANTED;
         }
         if (meta.hasItemName() || meta.hasCustomModelDataComponent()) {
-            return "it already has a custom item name or model";
+            return SkipReason.CUSTOM_ITEM_NAME;
         }
         if (!meta.getPersistentDataContainer().isEmpty()) {
-            return "another plugin owns it (persistent data present)";
+            return SkipReason.PLUGIN_DATA;
         }
         return null;
     }

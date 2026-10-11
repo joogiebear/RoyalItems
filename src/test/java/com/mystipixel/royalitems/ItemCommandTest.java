@@ -17,6 +17,12 @@ import static org.mockito.Mockito.*;
 
 class ItemCommandTest {
 
+    @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory;
+
+    private MessageManager messages() {
+        return TestMessages.bundled(directory.resolve("messages").toFile());
+    }
+
     // stack double that remembers its amount and clones into new doubles
     private static ItemStack stack(int maxStack) {
         ItemStack stack = mock(ItemStack.class);
@@ -44,7 +50,7 @@ class ItemCommandTest {
         when(sender.hasPermission(anyString())).thenReturn(true);
         try (var bukkit = mockStatic(Bukkit.class)) {
             bukkit.when(() -> Bukkit.getPlayerExact("Steve")).thenReturn(target);
-            new ItemCommand(mock(RoyalItemsPlugin.class), service)
+            new ItemCommand(mock(RoyalItemsPlugin.class), service, messages())
                     .onCommand(sender, mock(Command.class), "royalitems",
                             new String[]{"give", "Steve", "iron_sword", amount});
         }
@@ -71,7 +77,7 @@ class ItemCommandTest {
         doAnswer(i -> messages.add(i.getArgument(0))).when(player).sendMessage(anyString());
         RoyalItemsPlugin plugin = mock(RoyalItemsPlugin.class);
         when(plugin.getConfig()).thenReturn(new org.bukkit.configuration.file.YamlConfiguration());
-        new ItemCommand(plugin, service).onCommand(player, mock(Command.class), "royalitems", new String[]{sub});
+        new ItemCommand(plugin, service, messages()).onCommand(player, mock(Command.class), "royalitems", new String[]{sub});
         return messages;
     }
 
@@ -79,6 +85,39 @@ class ItemCommandTest {
         List<String> inspected = inspect("inspect");
         assertEquals(inspected, inspect("info"));
         assertTrue(inspected.stream().anyMatch(line -> line.contains("bonus: ") && line.endsWith("5")), inspected::toString);
+    }
+
+    @Test void inspectShowsTheSameTextAsBefore() {
+        org.bukkit.ChatColor gray = org.bukkit.ChatColor.GRAY;
+        org.bukkit.ChatColor white = org.bukkit.ChatColor.WHITE;
+        org.bukkit.ChatColor yellow = org.bukkit.ChatColor.YELLOW;
+        assertEquals(List.of(
+                org.bukkit.ChatColor.GOLD + "" + org.bukkit.ChatColor.BOLD + "Item Inspection",
+                gray + "Material: " + white + "STONE",
+                gray + "item_id:  " + white + "coal",
+                gray + "bonus: " + white + "5",
+                gray + "State:    " + yellow + "dressed, but the definition now uses STONE; left as-is",
+                gray + "Border:   " + yellow
+                        + "vanilla: custom packet borders are not opted in (rarity lore still works)"),
+                inspect("inspect"));
+    }
+
+    @Test void giveAndUsageShowTheSameTextAsBefore() {
+        CommandSender sender = mock(CommandSender.class);
+        when(sender.hasPermission(anyString())).thenReturn(true);
+        List<String> sent = new ArrayList<>();
+        doAnswer(i -> sent.add(i.getArgument(0))).when(sender).sendMessage(anyString());
+        FormattedItemService service = mock(FormattedItemService.class);
+        ItemCommand command = new ItemCommand(mock(RoyalItemsPlugin.class), service, messages());
+        try (var bukkit = mockStatic(Bukkit.class)) {
+            command.onCommand(sender, mock(Command.class), "ri", new String[]{});
+            command.onCommand(sender, mock(Command.class), "ri", new String[]{"give", "Steve"});
+            command.onCommand(sender, mock(Command.class), "ri", new String[]{"give", "Steve", "coal"});
+        }
+        assertEquals(List.of(
+                org.bukkit.ChatColor.GRAY + "Usage: /ri <give|reload|inspect|formatinv|export>",
+                org.bukkit.ChatColor.GRAY + "Usage: /royalitems give <player> <id> [amount]",
+                org.bukkit.ChatColor.RED + "Player 'Steve' is not online."), sent);
     }
 
     @Test void unstackableItemsAreGivenOnePerStack() {
