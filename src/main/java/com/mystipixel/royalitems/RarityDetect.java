@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Rarity-from-lore heuristic shared by the packet borders and {@code /royalitems inspect}.
@@ -22,6 +23,10 @@ public final class RarityDetect {
     public static final List<String> RANK =
             List.of("COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC");
 
+    // compiled once: the packet borders run these for every lore line of every item sent
+    private static final Pattern COLOR_CODE = Pattern.compile("§.");
+    private static final Pattern NON_LETTERS = Pattern.compile("[^A-Z]+");
+
     /** {@code standalone} is false when the line counted because of a context keyword. */
     public record Match(String rarity, String line, boolean standalone) {
     }
@@ -31,7 +36,7 @@ public final class RarityDetect {
 
     /** Strip legacy {@code §x} codes, trim and upper-case (eco lore ships literal section codes). */
     public static String sanitize(String raw) {
-        return raw.replaceAll("§.", "").trim().toUpperCase(Locale.ROOT);
+        return COLOR_CODE.matcher(raw).replaceAll("").trim().toUpperCase(Locale.ROOT);
     }
 
     public static List<String> sanitizeAll(List<String> rawLines) {
@@ -53,7 +58,7 @@ public final class RarityDetect {
             if (text.isEmpty()) {
                 continue;
             }
-            Set<String> words = new HashSet<>(Arrays.asList(text.split("[^A-Z]+")));
+            Set<String> words = new HashSet<>(Arrays.asList(NON_LETTERS.split(text)));
             words.remove("");
             boolean standalone = words.size() == 1;
             boolean hasContext = !Collections.disjoint(words, contextKeywords);

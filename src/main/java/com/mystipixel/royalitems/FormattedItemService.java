@@ -83,6 +83,8 @@ public final class FormattedItemService {
     private final Map<String, FormattedItemDefinition> byId = new HashMap<>();
     private final Map<Material, FormattedItemDefinition> byMaterial = new EnumMap<>(Material.class);
     private final Map<String, ItemStack> templates = new HashMap<>();   // id -> prebuilt stack (amount 1)
+    // parsed name and lore per definition and their stamps, so dressing doesn't re-parse and re-hash them
+    private final Map<FormattedItemDefinition, Rendered> rendered = new java.util.IdentityHashMap<>();
     // concurrent: getTag/getFuelId are public and may be called off-thread
     private final Map<String, NamespacedKey> tagKeys = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Rarity> rarities = new HashMap<>();
@@ -123,6 +125,7 @@ public final class FormattedItemService {
         byId.clear(); byId.putAll(next.byId);
         byMaterial.clear(); byMaterial.putAll(next.byMaterial);
         templates.clear(); templates.putAll(next.templates);
+        rendered.clear(); rendered.putAll(next.rendered);
         rarities.clear(); rarities.putAll(next.rarities);
         rules.clear(); rules.addAll(next.rules);
         disabledWorlds.clear(); disabledWorlds.addAll(next.disabledWorlds);
@@ -136,6 +139,7 @@ public final class FormattedItemService {
         byId.clear();
         byMaterial.clear();
         templates.clear();
+        rendered.clear();
         rarities.clear();
         rules.clear();
 
@@ -535,6 +539,13 @@ public final class FormattedItemService {
         if (def == null || looksCustom(stack)) {
             return stack;
         }
+        ItemStack template = stack.hasItemMeta() ? null : templates.get(def.id());
+        if (template != null) {
+            // a stack with no meta dresses exactly like the template it was built from
+            ItemStack copy = template.clone();
+            copy.setAmount(stack.getAmount());
+            return copy;
+        }
         return dress(stack, def, true);
     }
 
@@ -565,20 +576,17 @@ public final class FormattedItemService {
             return stack;
         }
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        Rendered look = rendered.computeIfAbsent(def, FormattedItemService::render);
         // A bound compass is named "Lodestone Compass" by vanilla; any name of ours would hide that.
-        Component name = def.displayName() == null || isLodestoneCompass(meta) ? null : text(def.displayName());
-        List<Component> lines = new ArrayList<>();
-        for (String line : def.lore()) {
-            lines.add(text(line));
-        }
-        List<Component> lore = lines.isEmpty() ? null : lines;
+        Component name = isLodestoneCompass(meta) ? null : look.name();
+        List<Component> lore = look.lore();
         // A field is ours to rewrite only while its stamp matches what we last wrote. Unstamped names are
         // still ours if italics are explicitly off (anvil renames are unstyled); unstamped lore is not.
         Component currentName = meta.displayName();
         if (fresh || owns(pdc, NAME_STAMP, fingerprint(currentName)) || styledByUs(currentName)) meta.displayName(name);
         if (fresh || owns(pdc, LORE_STAMP, loreFingerprint(meta.lore()))) meta.lore(lore);
-        pdc.set(key(NAME_STAMP), PersistentDataType.STRING, fingerprint(name));
-        pdc.set(key(LORE_STAMP), PersistentDataType.STRING, loreFingerprint(lore));
+        pdc.set(key(NAME_STAMP), PersistentDataType.STRING, name == null ? NO_NAME : look.nameStamp());
+        pdc.set(key(LORE_STAMP), PersistentDataType.STRING, look.loreStamp());
 
         String previous = pdc.get(key(OWNED_TAGS), PersistentDataType.STRING);
         Set<String> oldTags = new HashSet<>();
@@ -615,6 +623,19 @@ public final class FormattedItemService {
         }
         updated.setItemMeta(meta);
         return updated;
+    }
+
+    private record Rendered(Component name, List<Component> lore, String nameStamp, String loreStamp) {
+    }
+
+    private static Rendered render(FormattedItemDefinition def) {
+        Component name = def.displayName() == null ? null : text(def.displayName());
+        List<Component> lines = new ArrayList<>();
+        for (String line : def.lore()) {
+            lines.add(text(line));
+        }
+        List<Component> lore = lines.isEmpty() ? null : List.copyOf(lines);
+        return new Rendered(name, lore, fingerprint(name), loreFingerprint(lore));
     }
 
     // text() always sets italics explicitly off

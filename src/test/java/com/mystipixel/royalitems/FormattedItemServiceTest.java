@@ -281,6 +281,20 @@ class FormattedItemServiceTest {
         verify(dressed, never()).getItemMeta();
     }
 
+    @Test void stackWithoutMetaIsACopyOfTheTemplateWithItsAmount() throws Exception {
+        define(Material.COAL, "Coal", List.of("Common"), Map.of("fuel_id", "coal"));
+        ItemStack plain = mock(ItemStack.class);
+        when(plain.getType()).thenReturn(testMaterial(Material.COAL));
+        when(plain.getAmount()).thenReturn(7);
+        ItemStack dressed = service.formatIfSupported(plain);
+        assertNotSame(plain, dressed);
+        assertEquals(7, dressed.getAmount());
+        assertEquals("coal", service.getItemId(dressed));
+        assertEquals("coal", service.getFuelId(dressed));
+        verify(plain, never()).getItemMeta();
+        verify(plain, never()).clone();
+    }
+
     @Test void boundCompassKeepsVanillaNameButGetsLoreAndIdentity() throws Exception {
         define(Material.COMPASS, "&aCompass", List.of("Tool"), Map.of());
         StackState bound = new StackState(Material.COMPASS, org.bukkit.inventory.meta.CompassMeta.class);
